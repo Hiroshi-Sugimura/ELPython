@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.6"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>EchonetLite.py: EchonetLite.py マニュアル</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">EchonetLite.py<span id="projectnumber">&#160;0.0.1</span>
+   </div>
+   <div id="projectbrief">Python</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 構築: Doxygen 1.9.6 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','検索');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('index.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">読み取り中…</div>
+<div class="SRStatus" id="Searching">検索中…</div>
+<div class="SRStatus" id="NoMatches">一致する文字列を見つけられません</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title"><a class="el" href="_echonet_lite_8py.html" title="ECHONET Lite送受信処理を管理する、プロファイルオブジェクトや機器オブジェクトを管理する">EchonetLite.py</a> マニュアル </div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="md_index"></a> </p>
+<h1><a class="anchor" id="autotoc_md1"></a>
+使用方法</h1>
+<ol type="1">
+<li>EchonetLiteフォルダをプロジェクトフォルダに配置</li>
+<li>必要なライブラリをインストールする <div class="fragment"><div class="line">pip install netifaces2</div>
+</div><!-- fragment --></li>
+<li>メインプログラムで下記の様にインポートする <div class="fragment"><div class="line">from EchonetLite import EchonetLite, PDCEDT, ELOBJ</div>
+</div><!-- fragment --></li>
+<li>下記サンプルをベースに書き換える <div class="fragment"><div class="line">from EchonetLite import EchonetLite, PDCEDT, ELOBJ</div>
+<div class="line"> </div>
+<div class="line"># SET系命令を処理する、デバイス系ではこれにまじめに対応する</div>
+<div class="line"># SETI, SETC, SETGET</div>
+<div class="line">def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):</div>
+<div class="line">    print(&quot;---------- Set&quot;)</div>
+<div class="line">    print(&quot;from:&quot;, ip)</div>
+<div class="line">    print(&quot;eldata:&quot;, &quot;TID:&quot;, tid, &quot;SEOJ:&quot;, seoj, &quot;DEOJ:&quot;, deoj, &quot;ESV:&quot;, esv, &quot;OPC:&quot;, opc, &quot;EPC:&quot;, epc, pdcedt.printString())</div>
+<div class="line">    return True</div>
+<div class="line"> </div>
+<div class="line"># GET系命令を処理する、ほとんど処理する必要はない</div>
+<div class="line"># GET, INF_REQ, INFC, SETGET</div>
+<div class="line">def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):</div>
+<div class="line">    print(&quot;---------- Set&quot;)</div>
+<div class="line">    print(&quot;from:&quot;, ip)</div>
+<div class="line">    print(&quot;eldata:&quot;, &quot;TID:&quot;, tid, &quot;SEOJ:&quot;, seoj, &quot;DEOJ:&quot;, deoj, &quot;ESV:&quot;, esv, &quot;OPC:&quot;, opc, &quot;EPC:&quot;, epc, pdcedt.printString())</div>
+<div class="line">    return True</div>
+<div class="line"> </div>
+<div class="line"># INF系、GETの返信を処理する、コントローラ系ではここから機器情報を収集する</div>
+<div class="line"># INF, SETI_SNA, SETC_SNA, GET_SNA, INF_SNA, SET_RES, GET_RES, INFC_RES, SETGET_SNA, SETGET_RES</div>
+<div class="line">def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):</div>
+<div class="line">    print(&quot;---------- Set&quot;)</div>
+<div class="line">    print(&quot;from:&quot;, ip)</div>
+<div class="line">    print(&quot;eldata:&quot;, &quot;TID:&quot;, tid, &quot;SEOJ:&quot;, seoj, &quot;DEOJ:&quot;, deoj, &quot;ESV:&quot;, esv, &quot;OPC:&quot;, opc, &quot;EPC:&quot;, epc, pdcedt.printString())</div>
+<div class="line">    return True</div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"> </div>
+<div class="line"># ECHONET Liteのオブジェクトを準備</div>
+<div class="line">el = EchonetLite([[0x05,0xff,0x01]])</div>
+<div class="line"> </div>
+<div class="line"># ECHONET Liteの命令処理を登録し、受信開始</div>
+<div class="line">el.begin(userSetFunc, userGetFunc, userInfFunc)</div>
+<div class="line"> </div>
+<div class="line"># 一般照明の電源状態を定期的に確認</div>
+<div class="line">while True:</div>
+<div class="line">    el.sendMultiOPC1String(&#39;05ff01&#39;, &#39;029001&#39;, &#39;62&#39;, &#39;80&#39;, &#39;00&#39;)</div>
+<div class="line">    now = datetime.datetime.now()</div>
+<div class="line">    print(now.strftime(&quot;%Y年%m月%d日 %H時%M分%S秒&quot;), &quot;に送信&quot;)</div>
+<div class="line">    time.sleep(60) # 1 min</div>
+</div><!-- fragment --></li>
+<li>より詳細なサンプルはELWeb、SSNGpyを参考にしてください </li>
+</ol>
+</div></div><!-- PageDoc -->
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">構築: <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.6 </li>
+  </ul>
+</div>
+</body>
+</html>

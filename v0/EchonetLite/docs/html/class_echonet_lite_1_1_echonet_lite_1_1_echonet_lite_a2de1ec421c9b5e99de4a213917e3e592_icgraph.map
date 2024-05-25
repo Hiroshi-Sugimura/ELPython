@@ -1,0 +1,14 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.send" name="EchonetLite.EchonetLite.EchonetLite.send">
+<area shape="rect" id="node1" title="ECHOENT Lite のデータ送信" alt="" coords="930,300,1097,341"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#ad203c081cb3b5a90c9303e73851212f8" title="detailsを指定して送信" alt="" coords="708,201,875,242"/>
+<area shape="rect" id="node11" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a17b1892fcd684faeed2398118f6cdc4d" title="OPCが1としてユニキャスト、TIDあり" alt="" coords="701,332,882,373"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#adbcd3a97d35447ea4fee0208fb142521" title="Getに対して複数OPCに対応して返答する内部関数" alt="" coords="456,5,633,46"/>
+<area shape="rect" id="node6" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a40dfba9ef8ff80e6660e4b099410a555" title="INFCに対して複数OPCに対応して返答する内部関数" alt="" coords="456,71,634,111"/>
+<area shape="rect" id="node7" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a058568e0b5a316a1ea843b9baa75743b" title="Inf_Reqに対して複数OPCに対応して返答する内部関数" alt="" coords="450,136,639,177"/>
+<area shape="rect" id="node8" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a10872cbabcd21beaa55ee30732c5c8b1" title="Setに対して複数OPCに対応して返答する内部関数" alt="" coords="457,201,633,242"/>
+<area shape="rect" id="node9" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a9bcfc2a70ea3cc0c3f164e622906ac2f" title="SETGETに対して複数OPCに対応して返答する内部関数" alt="" coords="448,267,642,307"/>
+<area shape="rect" id="node10" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a58f11e98732730f32a87bf3b4680cb0d" title="指定IPの指定EOJのもつINF、SET、GETプロパティマップを取得する" alt="" coords="436,332,653,373"/>
+<area shape="rect" id="node4" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a5ae2b545620cdaa44d0b9da55d4c2f90" title="受信データは内部で解析して、ライブラリユーザにコールバックする" alt="" coords="221,136,388,177"/>
+<area shape="rect" id="node5" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a329d4ae8423f493afa020505e5ca9a5b" title="受信開始" alt="" coords="5,136,173,177"/>
+<area shape="rect" id="node12" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#aac62c8f1f461706d98761391a44e5417" title="OPCが1としてユニキャスト、TID自動" alt="" coords="461,397,628,438"/>
+</map>

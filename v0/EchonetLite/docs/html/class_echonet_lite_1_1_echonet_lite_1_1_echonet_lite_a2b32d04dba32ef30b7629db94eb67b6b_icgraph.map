@@ -1,0 +1,16 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.sendMulti" name="EchonetLite.EchonetLite.EchonetLite.sendMulti">
+<area shape="rect" id="node1" title="マルチキャストの送信" alt="" coords="988,300,1155,341"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#ad203c081cb3b5a90c9303e73851212f8" title="detailsを指定して送信" alt="" coords="752,201,919,242"/>
+<area shape="rect" id="node11" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a210e08d67480fe72c92a8f9b5ef5dc05" title="OPCが1としてマルチキャスト、TID指定" alt="" coords="731,332,940,373"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#adbcd3a97d35447ea4fee0208fb142521" title="Getに対して複数OPCに対応して返答する内部関数" alt="" coords="486,5,663,46"/>
+<area shape="rect" id="node6" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a40dfba9ef8ff80e6660e4b099410a555" title="INFCに対して複数OPCに対応して返答する内部関数" alt="" coords="486,71,664,111"/>
+<area shape="rect" id="node7" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a058568e0b5a316a1ea843b9baa75743b" title="Inf_Reqに対して複数OPCに対応して返答する内部関数" alt="" coords="480,136,669,177"/>
+<area shape="rect" id="node8" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a10872cbabcd21beaa55ee30732c5c8b1" title="Setに対して複数OPCに対応して返答する内部関数" alt="" coords="487,201,663,242"/>
+<area shape="rect" id="node9" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a9bcfc2a70ea3cc0c3f164e622906ac2f" title="SETGETに対して複数OPCに対応して返答する内部関数" alt="" coords="478,267,672,307"/>
+<area shape="rect" id="node10" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a58f11e98732730f32a87bf3b4680cb0d" title="指定IPの指定EOJのもつINF、SET、GETプロパティマップを取得する" alt="" coords="466,332,683,373"/>
+<area shape="rect" id="node4" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a5ae2b545620cdaa44d0b9da55d4c2f90" title="受信データは内部で解析して、ライブラリユーザにコールバックする" alt="" coords="236,136,403,177"/>
+<area shape="rect" id="node5" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a329d4ae8423f493afa020505e5ca9a5b" title="受信開始" alt="" coords="5,136,173,177"/>
+<area shape="rect" id="node12" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#aa991ee333e15e46205681106ad766a4d" title="OPCが1としてマルチキャスト、TID自動" alt="" coords="482,397,668,438"/>
+<area shape="rect" id="node13" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a9c99d730fed3db61e882339d10dd7f88" title="INFプロパティならマルチキャストで送信" alt="" coords="221,397,418,438"/>
+<area shape="rect" id="node14" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#aac4ec6fe51f1c4b5d5fc5fe88cb02c28" title="保持しているオブジェクトのEPCに対応するEDTを更新する。更新した結果、INFプロパティならマルチキャスト送信もする" alt="" coords="5,397,173,438"/>
+</map>

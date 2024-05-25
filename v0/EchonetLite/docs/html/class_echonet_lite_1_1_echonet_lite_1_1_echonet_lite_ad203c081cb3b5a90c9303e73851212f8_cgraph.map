@@ -1,0 +1,6 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.sendDetails" name="EchonetLite.EchonetLite.EchonetLite.sendDetails">
+<area shape="rect" id="node1" title="detailsを指定して送信" alt="" coords="5,71,173,111"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a579213bb512dbb0e1b3ca9530b3385f6" title="intまたはint[]を入力するとstrを出力する" alt="" coords="221,5,391,46"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a2de1ec421c9b5e99de4a213917e3e592" title="ECHOENT Lite のデータ送信" alt="" coords="222,71,390,111"/>
+<area shape="rect" id="node4" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a2b32d04dba32ef30b7629db94eb67b6b" title="マルチキャストの送信" alt="" coords="222,136,390,177"/>
+</map>

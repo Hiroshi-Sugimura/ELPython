@@ -1,0 +1,8 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.replySetgetDetail" name="EchonetLite.EchonetLite.EchonetLite.replySetgetDetail">
+<area shape="rect" id="node1" title="SETGETに対して複数OPCに対応して返答する内部関数" alt="" coords="5,39,200,79"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a1e77999193db0ad38a5b10e5d70d87f6" title="EOJとEPCを指定した時、そのプロパティがあるかチェックする内部関数" alt="" coords="248,5,465,46"/>
+<area shape="rect" id="node4" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a13e275752f8d759fb80a75cc5059b266" title="detailsを指定して送信" alt="" coords="273,71,440,111"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a579213bb512dbb0e1b3ca9530b3385f6" title="intまたはint[]を入力するとstrを出力する" alt="" coords="513,5,683,46"/>
+<area shape="rect" id="node5" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#adbcb0425cc647f8fb62df5389a9ba7c6" title="ECHOENT Lite のデータ送信" alt="" coords="515,71,682,111"/>
+<area shape="rect" id="node6" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a37589754240b92f2e71b541a97c32bd3" title="マルチキャストの送信" alt="" coords="515,136,682,177"/>
+</map>

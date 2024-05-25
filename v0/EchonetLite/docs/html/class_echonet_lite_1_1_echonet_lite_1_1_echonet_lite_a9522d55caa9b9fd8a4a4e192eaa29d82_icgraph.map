@@ -1,0 +1,5 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.sendMultiOPC1" name="EchonetLite.EchonetLite.EchonetLite.sendMultiOPC1">
+<area shape="rect" id="node1" title="OPCが1としてマルチキャスト、TID自動" alt="" coords="466,5,652,46"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#ac867becf31bb9ede3679c328d2c3bae9" title="INFプロパティならマルチキャストで送信" alt="" coords="221,5,418,46"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a764b4f82ecf26ab2ac0002a81ce6a18b" title="保持しているオブジェクトのEPCに対応するEDTを更新する。更新した結果、INFプロパティならマルチキャスト送信もする" alt="" coords="5,5,173,46"/>
+</map>

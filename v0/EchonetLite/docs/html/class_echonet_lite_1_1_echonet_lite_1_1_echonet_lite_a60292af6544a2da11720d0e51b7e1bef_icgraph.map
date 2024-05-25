@@ -1,0 +1,7 @@
+<map id="EchonetLite.EchonetLite.EchonetLite.tidAutoIncrement" name="EchonetLite.EchonetLite.EchonetLite.tidAutoIncrement">
+<area shape="rect" id="node1" title="内部のTIDを1進める" alt="" coords="731,39,925,79"/>
+<area shape="rect" id="node2" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a5d0cd656122d44ea34f1fad11ca940ab" title="指定IPの指定EOJのもつINF、SET、GETプロパティマップを取得する" alt="" coords="466,5,683,46"/>
+<area shape="rect" id="node3" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a9522d55caa9b9fd8a4a4e192eaa29d82" title="OPCが1としてマルチキャスト、TID自動" alt="" coords="482,71,668,111"/>
+<area shape="rect" id="node4" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#ac867becf31bb9ede3679c328d2c3bae9" title="INFプロパティならマルチキャストで送信" alt="" coords="221,71,418,111"/>
+<area shape="rect" id="node5" href="$class_echonet_lite_1_1_echonet_lite_1_1_echonet_lite.html#a764b4f82ecf26ab2ac0002a81ce6a18b" title="保持しているオブジェクトのEPCに対応するEDTを更新する。更新した結果、INFプロパティならマルチキャスト送信もする" alt="" coords="5,71,173,111"/>
+</map>
