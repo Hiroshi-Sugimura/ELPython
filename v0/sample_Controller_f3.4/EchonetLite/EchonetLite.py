@@ -209,9 +209,7 @@ class EchonetLite():
         @param epc int
         @param edt list[int]
         """
-        if type(obj) is list[int]:
-            obj = self.getHexString(obj)
-        elif type(obj) is list:
+        if type(obj) is list:
             obj = self.getHexString(obj)
 
         if epc == 0x9d or epc == 0x9e or epc == 0x9f:

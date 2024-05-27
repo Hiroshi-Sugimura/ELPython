@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+import platform
+if platform.system() == 'Windows': # windows and Python v3,4.0
+    print("# Windows")
+    import locale
+    locale.setlocale(locale.LC_CTYPE, "Japanese_Japan.932")
 
 from copy import deepcopy
 
@@ -7,6 +12,7 @@ import time
 import datetime
 import json
 from EchonetLite import EchonetLite, PDCEDT
+
 
 args = sys.argv
 
