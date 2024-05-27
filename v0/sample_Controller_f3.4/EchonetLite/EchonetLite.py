@@ -14,7 +14,9 @@ if platform.system() == 'Linux':
     import ipget  #  インストール必要, for Linux
 import threading
 import struct
-import netifaces #  インストール必要 netifaces2
+#import netifaces #  インストール必要 netifaces2
+import uuid
+import re
 
 
 if __name__ == '__main__':
@@ -89,9 +91,9 @@ class EchonetLite():
             self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for windows
 
         #print("Local IP:", self.LOCAL_ADDR) # debug
-        self.mac:list[int] = self.getHwAddr()
-        self.tid:list[int] = [0,0]
-        self.devices:Dict[str, ELOBJ] = {}
+        self.mac = self.getHwAddr()
+        self.tid = [0,0]
+        self.devices = {}
         self.userSetFunc = self.dummyFuncion
         self.userGetFunc = self.dummyFuncion
         self.userInfFunc = self.dummyFuncion
@@ -99,7 +101,7 @@ class EchonetLite():
             eojs = [ EchonetLite.EOJ_Controller ]
         self.eojs = eojs
         self.instanceNumber = len(eojs)
-        k:str = "" # devices index = key
+        k = "" # devices index = key
         # device object
         for eoj in eojs:
             k = self.getHexString(eoj)  # eoj:str
@@ -151,7 +153,7 @@ class EchonetLite():
         #  受信設定
         self.rsock.close()
 
-    def dummyFuncion(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
+    def dummyFuncion(self, ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
         """!
         @brief ユーザのコールバックが指定されない場合のダミー関数
         @param ip (str)
@@ -200,7 +202,7 @@ class EchonetLite():
             self.sendMultiOPC1(seoj, deoj, self.INF, 0xd5, self.devices['0ef001'][0xd5]) # オブジェクトリスト通知
 
 
-    def update(self, obj:list[int]|str, epc:int, edt:list[int]):
+    def update(self, obj, epc, edt):
         """!
         @brief 保持しているオブジェクトのEPCに対応するEDTを更新する。更新した結果、INFプロパティならマルチキャスト送信もする
         @param obj list[int]|str
@@ -220,7 +222,7 @@ class EchonetLite():
 
 
     #  送信
-    def send(self, ip:str, message:bytes| list[int]| str):
+    def send(self, ip, message):
         """!
         @brief ECHOENT Lite のデータ送信
         @param buffer (bytes|list[int]|str)
@@ -239,7 +241,7 @@ class EchonetLite():
         ssock.close()
 
 
-    def sendOPC1TID(self, ip:str, tid:list[int]| str, seoj:list[int] | str, deoj:list[int]| str, esv:int|str, epc:int| str, pdcedt:PDCEDT| str):
+    def sendOPC1TID(self, ip, tid, seoj, deoj, esv, epc, pdcedt):
         """!
         @brief OPCが1としてユニキャスト、TIDあり
         @param ip (str)
@@ -271,10 +273,10 @@ class EchonetLite():
         elif type(pdcedt) is list:
             pdcedt = self.getHexString(pdcedt)
 
-        smsg:str = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
+        smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.send(ip, smsg)
 
-    def sendOPC1(self, ip:str, seoj:list[int]|str, deoj:list[int]|str, esv:int|str, epc:int|str, pdcedt:PDCEDT|str):
+    def sendOPC1(self, ip, seoj, deoj, esv, epc, pdcedt):
         """!
         @brief OPCが1としてユニキャスト、TID自動
         @param ip (str)
@@ -287,7 +289,7 @@ class EchonetLite():
         """
         self.sendOPC1TID(ip, self.getTidString(), seoj, deoj, esv, epc, pdcedt)
 
-    def sendDetails(self, ip:str, tid:list[int]|str, seoj:list[int]|str, deoj:list[int]|str, esv:int|str, opc:int|str, details:dict[int,PDCEDT]):
+    def sendDetails(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief detailsを指定して送信
         @param ip str
@@ -324,7 +326,7 @@ class EchonetLite():
         else:
             self.send(ip, smsg)
 
-    def sendMulti(self, message:bytes|list[int]|str):
+    def sendMulti(self, message):
         """!
         @brief マルチキャストの送信
         @param message (bytes | list[int] | str)
@@ -344,7 +346,7 @@ class EchonetLite():
         ssock.close()
 
 
-    def sendMultiOPC1TID(self, tid:list[int]|str, seoj:list[int]|str, deoj:list[int]|str, esv:int|str, epc:int|str, pdcedt:PDCEDT|list[int]|str):
+    def sendMultiOPC1TID(self, tid, seoj, deoj, esv, epc, pdcedt):
         """!
         @brief OPCが1としてマルチキャスト、TID指定
         @param ip (str)
@@ -376,11 +378,11 @@ class EchonetLite():
         elif type(pdcedt) == list:
             pdcedt = self.getHexString(pdcedt)
 
-        smsg:str = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
+        smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.sendMulti(smsg)
 
 
-    def sendMultiOPC1(self, seoj:list[int]|str, deoj:list[int]|str, esv:int|str, epc:int|str, pdcedt:PDCEDT|str):
+    def sendMultiOPC1(self, seoj, deoj, esv, epc, pdcedt):
         """!
         @brief OPCが1としてマルチキャスト、TID自動
         @param ip (str)
@@ -395,14 +397,14 @@ class EchonetLite():
         self.tidAutoIncrement()
         self.sendMultiOPC1TID( tid, seoj, deoj, esv, epc, pdcedt)
 
-    def sendGetPropertyMap(self, ip:str, eoj:list[int]|str):
+    def sendGetPropertyMap(self, ip, eoj):
         """!
         @brief 指定IPの指定EOJのもつINF、SET、GETプロパティマップを取得する
         @param ip (str)
         @param eoj (list[int]|str)
         """
         # プロファイルオブジェクトのときはプロパティマップももらうけど，識別番号ももらう
-        pdcedts:dict[int, PDCEDT] = {}
+        pdcedts = {}
         if eoj[0:3] == [0x0e,0xf0,0x01]:
             pdcedts[0x83] = PDCEDT([0])
             pdcedts[0x9d] = PDCEDT([0])
@@ -417,7 +419,7 @@ class EchonetLite():
             self.sendDetails( ip, self.getTidString(), EchonetLite.EOJ_NodeProfile, eoj, EchonetLite.GET, 0x03, pdcedts)
         self.tidAutoIncrement()
 
-    def replyGetDetail(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, details:dict):
+    def replyGetDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief Getに対して複数OPCに対応して返答する内部関数
         @param ip (str)
@@ -449,7 +451,7 @@ class EchonetLite():
         self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
         return success
 
-    def replyGetDetail_sub(self, eoj:list[int], epc:int) -> PDCEDT|None:
+    def replyGetDetail_sub(self, eoj, epc):
         """!
         @brief EOJとEPCを指定した時、そのプロパティがあるかチェックする内部関数
         @param ip str
@@ -466,7 +468,7 @@ class EchonetLite():
             return None
 
 
-    def replySetDetail(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, details:dict):
+    def replySetDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief Setに対して複数OPCに対応して返答する内部関数
         @param ip (str)
@@ -509,7 +511,7 @@ class EchonetLite():
         return success
 
 
-    def replySetDetail_sub(self, eoj:list[int], epc:int) -> PDCEDT | None:
+    def replySetDetail_sub(self, eoj, epc):
         """!
         @brief EOJとEPCを指定した時、そのプロパティがあるかチェックする内部関数
         @param ip (str)
@@ -526,7 +528,7 @@ class EchonetLite():
             return None
 
 
-    def replyInfreqDetail(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, details:dict):
+    def replyInfreqDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief Inf_Reqに対して複数OPCに対応して返答する内部関数
         @param ip (str)
@@ -562,7 +564,7 @@ class EchonetLite():
         return success
 
 
-    def replyInfreqDetail_sub(self, eoj:list[int], epc:int) -> PDCEDT | None:
+    def replyInfreqDetail_sub(self, eoj, epc):
         """!
         @brief EOJとEPCを指定した時、そのプロパティがあるかチェックする内部関数
         @param ip (str)
@@ -580,7 +582,7 @@ class EchonetLite():
 
 
 
-    def replySetgetDetail(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, details:dict):
+    def replySetgetDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief SETGETに対して複数OPCに対応して返答する内部関数
         @param ip (str)
@@ -615,7 +617,7 @@ class EchonetLite():
         return success
 
 
-    def replyInfcDetail(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, details:dict):
+    def replyInfcDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
         @brief INFCに対して複数OPCに対応して返答する内部関数
         @param ip (str)
@@ -715,7 +717,7 @@ class EchonetLite():
                 # print('### Other ###')
 
 
-    def parseDetails(self, esv:int, opc:int, details:list[int]) -> dict:
+    def parseDetails(self, esv, opc, details):
         """!
         @brief opcを見ながらepc, pdc, edt部分を解釈
         @param esv (int)
@@ -781,7 +783,7 @@ class EchonetLite():
 
 
 
-    def parsePropertyMap(self, pdcedt:PDCEDT) -> list[int]:
+    def parsePropertyMap(self, pdcedt):
         """!
         @brief EPC 0x9d, 0x9e, 0x9fのプロパティマップに関してedt部分を解釈
         @param pdcedt PDCEDT
@@ -810,7 +812,7 @@ class EchonetLite():
         return profs
 
 
-    def hasEOJs(self, eoj:list[int]) -> bool:
+    def hasEOJs(self, eoj):
         """!
         @brief 指定のEOJがあるかチェック
         @param eoj List[int]
@@ -834,7 +836,7 @@ class EchonetLite():
                     return True
         return False
 
-    def checkInfAndSend(self, obj:list[int]|str, epc:int):
+    def checkInfAndSend(self, obj, epc):
         """!
         @brief INFプロパティならマルチキャストで送信
         @param obj List[int]|str
@@ -847,7 +849,7 @@ class EchonetLite():
             self.sendMultiOPC1(obj,EchonetLite.EOJ_Controller,EchonetLite.INF,epc,self.devices[obj][epc])
 
 
-    def verifyPacket(self, data:list) -> bool:
+    def verifyPacket(self, data):
         """!
         @brief 受信パケットの正常性チェック
         @param data (list)
@@ -928,7 +930,7 @@ class EchonetLite():
         else:
             self.tid[1] += 1
 
-    def getTidString(self) -> str:
+    def getTidString(self):
         """!
         @brief TIDを文字列 '0000' の形で作る
         @return str
@@ -936,7 +938,7 @@ class EchonetLite():
         """
         return format(self.tid[0],'02x') + format(self.tid[1],'02x')
 
-    def getHexString(self, value:int|list[int]) -> str:
+    def getHexString(self, value):
         """!
         @brief intまたはint[]を入力するとstrを出力する
         @param value (int | list[int])
@@ -948,25 +950,25 @@ class EchonetLite():
         else:
             return format(value,'02x')
 
-    def getInstanceList(self, value:list[list[int]]) -> list[int]:
+    def getInstanceList(self, value):
         """!
         @brief インスタンスリストを作る内部関数
         @param value (list[list[int]])
         @return list[int]
         """
         num = len(value)
-        flat:list[int] = sum(value, [])  # flatten
+        flat = sum(value, [])  # flatten
         flat.insert(0, num)
         return flat
 
-    def getClassList(self, value:list[list[int]]) -> list[int]:
+    def getClassList(self, value):
         """!
         @brief クラスリストを作る内部関数
         @param value (list[list[int]])
         @return list[int]
         """
         classList = [obj[0:2] for obj in value]
-        uClassList:list[list[int]] = []
+        uClassList = []
         # classListにあり、uClassListにないものを探してリストアップする
         for v in classList:
             exist = False
@@ -976,28 +978,29 @@ class EchonetLite():
             if exist == False:
                 uClassList.append(v)
         num = len(uClassList)
-        flat:list[int] = sum(uClassList, [])
+        flat = sum(uClassList, [])
         flat.insert(0, num)
         return flat
 
-    def getHwAddr(self) -> list[int]:
+    def getHwAddr(self):
         """!
         @brief Macアドレスを list[6] の型で求める
         @return list[int] size 6
         """
         if platform.system() == 'Windows': # windows
-            nifs = netifaces.interfaces()
-            i = nifs[netifaces.AF_INET]
-            macStr = netifaces.ifaddresses(i)[netifaces.AF_LINK][0]['addr']
+            mac = uuid.getnode()
+            macStr = ':'.join(re.findall('..', '%012x' % mac))
             ar = macStr.split(':')[0:6]
             return [int(x,16) for x in ar]
         elif platform.system() == 'Darwin': # Mac
-            nifs = netifaces.ifaddresses('en0')
-            macStr = nifs[netifaces.AF_PACKET][0]['addr']
+            mac = uuid.getnode()
+            macStr = ':'.join(re.findall('..', '%012x' % mac))
             ar = macStr.split(':')[0:6]
             return [int(x,16) for x in ar]
         else:
             return [0,0,0,0,0,0]
+
+
 
 if __name__ == '__main__':
     print("===== echonet_lite.py unit test")

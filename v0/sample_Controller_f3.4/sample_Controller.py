@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from typing import List, Dict, Union, Optional
 from copy import deepcopy
 
 import sys
@@ -11,18 +10,18 @@ from EchonetLite import EchonetLite, PDCEDT
 
 args = sys.argv
 
-facilities:Dict[str, Dict[str, Dict[str, str]]] = {} # ECHONET Liteネットワーク機器
+facilities = {} # ECHONET Liteネットワーク機器
 
-def getFacilitiesJson(f:Dict[str,  Dict[str, Dict[str, str]]]) -> str:
+def getFacilitiesJson(f):
     jsonStr = json.dumps(f, ensure_ascii=False, indent=2)
     return jsonStr
 
 
-def userSet Func( ip:str, tid:List[int], seoj:List[int], deoj:List[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
-    """! 
+def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
+    """!
     @brief SET系（SETI、SETC、SETGET）命令を受け取った時に処理するものがあればここに記述
     @param ip (str)
-    @param tid (List[int]) 
+    @param tid (List[int])
     @param seoj (List[int])
     @param deoj (List[int])
     @param esv (int)
@@ -53,7 +52,7 @@ def userSet Func( ip:str, tid:List[int], seoj:List[int], deoj:List[int], esv:int
     return True
 
 
-def userGetFunc( ip:str, tid:List[int], seoj:List[int], deoj:List[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
+def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     """!
     @brief GET系（GET、SETGET、INFC）命令を受け取った時に処理するものがあればここに記述
     @param ip (str)
@@ -73,7 +72,7 @@ def userGetFunc( ip:str, tid:List[int], seoj:List[int], deoj:List[int], esv:int,
     return True
 
 
-def userInfFunc( ip:str, tid:List[int], seoj:List[int], deoj:List[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
+def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     """!
     @brief INF系命令（INF、*_RES、*_SNA）を受け取った時に処理するものがあればここに記述
     @param ip (str)
@@ -136,6 +135,8 @@ el.update([0x05,0xff,0x01], 0x9e, [0x80])
 el.update([0x05,0xff,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
 el.begin(userSetFunc, userGetFunc, userInfFunc)
 el.sendMultiOPC1( el.EOJ_NodeProfile, el.EOJ_NodeProfile, el.GET, 0xd6, PDCEDT([0])) # インスタンスリスト取得
+
+
 
 while True:
     #el.sendMultiOPC1( el.EOJ_Controller, '013000', '62', '80', '00') # ホームエアコン

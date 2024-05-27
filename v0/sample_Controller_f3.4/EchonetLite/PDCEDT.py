@@ -18,9 +18,9 @@ class PDCEDT():
         @brief コンストラクタ
         @param obj (PDCEDT | list[int]) = None
         """
-        self.pdc:int = 0 # @var pdc
-        self.edt:list[int] = []
-        self.length:int = 1
+        self.pdc = 0 # @var pdc
+        self.edt = []
+        self.length = 1
         if obj == None:
             self.pdc = 0
             self.edt = []
@@ -59,7 +59,7 @@ class PDCEDT():
             return NotImplemented
         return (self.pdc == other.pdc) and (self.edt == other.edt) and (self.length == other.length)
 
-    def setEDT(self, edt:list[int]):
+    def setEDT(self, edt):
         """!
         @brief EDTを指定して格納、PDCは自動計算
         @param edt (list[int])
