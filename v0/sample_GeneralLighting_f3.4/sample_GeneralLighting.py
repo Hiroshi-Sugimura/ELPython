@@ -1,17 +1,13 @@
 #!/usr/bin/python3
 
 import sys
-#import ipget  #  インストール必要, for Linux
-import ipaddress
+import os
+import signal
 import time
 import datetime
-import threading
-import struct
 from EchonetLite import EchonetLite, PDCEDT
 
-
 args = sys.argv
-
 
 def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt:PDCEDT):
     """!
@@ -94,12 +90,24 @@ el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9
 
 el.begin(userSetFunc, userGetFunc, userInfFunc)
 
-while True:
-    # el.sendMultiOPC1('05ff01', '029001', '62', '80', '00')
-    now = datetime.datetime.now()
-    # print(frame)
-    # print(now.strftime("%Y年%m月%d日 %H時%M分%S秒"), "に送信されました。") # フォーマットして出力
-    time.sleep(60) # 1 min
+def loop():
+    while True:
+        # el.sendMultiOPC1('05ff01', '029001', '62', '80', '00')
+        now = datetime.datetime.now()
+        # print(frame)
+        # print(now.strftime("%Y年%m月%d日 %H時%M分%S秒"), "に送信されました。") # フォーマットして出力
+        time.sleep(60) # 1 min
 
 
-del el
+def handler(signum, frame):
+    # 何らかの処理
+    del el
+    sys.exit(0)
+
+signal.signal(signal.SIGFPE, handler)
+
+try:
+    loop()
+except:
+    print("except -> exit")
+    os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく

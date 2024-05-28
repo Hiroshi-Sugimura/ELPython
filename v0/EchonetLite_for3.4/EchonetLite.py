@@ -14,7 +14,6 @@ if platform.system() == 'Linux':
     import ipget  #  インストール必要, for Linux
 import threading
 import struct
-#import netifaces #  インストール必要 netifaces2
 import uuid
 import re
 
@@ -186,11 +185,15 @@ class EchonetLite():
             self.userInfFunc = ifunc
         # 受信設定
         self.rsock.bind(('', self.ECHONETport))
+        self.rsock.settimeout(1)
         def recv():
             while True:
-                data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                # bytesを16進数文字列に変換する
-                self.returner(ip[0], list(data))
+                try:
+                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                    # bytesを16進数文字列に変換する
+                    self.returner(ip[0], list(data))
+                except socket.timeout:
+                    continue
         self.thread = threading.Thread(target=recv, args=())
         self.thread.start() #  受信スレッド開始
         # インスタンスリスト通知 D5
