@@ -23,6 +23,9 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt:PDCEDT):
     @return bool 成功=True, 失敗=False、プロパティがあればTrueにする
     @note SET必要な処理を記述する。プロパティの変化があれば、正しくデバイス情報をUpdateしておくことが重要
     """
+    # 自分のオブジェクト以外無視
+    if deoj != [0x02,0x90,0x01]:
+        return False
     print("---------- Set")
     print("from:", ip)
     print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
@@ -60,6 +63,11 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     print("---------- Get")
     print("from:", ip)
     print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    # 自分のオブジェクト以外無視
+    if deoj != [0x02,0x90,0x01]:
+        print("The object is not managed.")
+        return False
+    print("The object is managed.")
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -76,6 +84,9 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @return bool 成功=True, 失敗=False、プロパティがあればTrueにする
     @note INF命令に関しては一般に、デバイス系では無視、コントローラー系では情報保持をすると思われる。
     """
+    # 自分のオブジェクト以外無視
+    if deoj != [0x02,0x90,0x01]:
+        return False
     print("---------- INF, RES, SNA")
     print("from:", ip)
     print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
@@ -86,7 +97,7 @@ el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
 el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
 el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
 el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
-#el.println()
+# el.println() # 設定確認
 
 el.begin(userSetFunc, userGetFunc, userInfFunc)
 

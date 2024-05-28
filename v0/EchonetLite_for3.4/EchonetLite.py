@@ -76,7 +76,7 @@ class EchonetLite():
         # optionsを内部に保持
         self.debug = False
         if options:
-            if options.debug == True:
+            if options["debug"] == True:
                 self.debug = True
 
         # ip 設定
@@ -89,7 +89,7 @@ class EchonetLite():
         else:
             self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for windows
 
-        #print("Local IP:", self.LOCAL_ADDR) # debug
+        print("# Local IP:", self.LOCAL_ADDR) if self.debug else '' # debug
         self.mac = self.getHwAddr()
         self.tid = [0,0]
         self.devices = {}
@@ -660,8 +660,11 @@ class EchonetLite():
         @param data list[int]
         @return boolean  True=成功, False=失敗
         """
+        # print("# ---- returner()") if self.debug else '' # debug
         if self.verifyPacket(data) == False: # これ以降の解析をする価値があるか？
+            # print("# returner() recv invalid data:", data) if self.debug else '' # debug
             return # 解析する価値なし、Drop
+        # print("# returner() recv verified data:", data) if self.debug else '' # debug
 
         # 受信データをまずは意味づけしておく
         tid = data[EchonetLite.TID:EchonetLite.SEOJ]
@@ -671,13 +674,15 @@ class EchonetLite():
         opc = data[EchonetLite.OPC]
         details = self.parseDetails( esv, opc, data[EchonetLite.EPC:])
 
+        # print("tid:",tid, ", seoj:", seoj, ", deoj:", deoj, ", esv:", esv, ", opc:", opc)
+
         # インスタンス0対応
         instance_min = deoj[2]
         instance_max = deoj[2] + 1
 
         if deoj[2] == 0:
             instance_min = 1
-            instance_max = self.instanceNumber
+            instance_max = self.instanceNumber + 1 # rangeは (min..<max) のようです
 
         for i in range(instance_min, instance_max):
             deoj[2] = i
@@ -685,7 +690,9 @@ class EchonetLite():
             # デバイスオブジェクトあるか
             if self.devices[ self.getHexString( deoj )] == None:
                 # ないのでDrop
+                print("# returner() invalid DEOJ:", deoj) if self.debug else '' # debug
                 continue
+            print("# returner() valid DEOJ:", deoj) if self.debug else '' # debug
 
             # あればユーザ関数呼ぶ
             # SetはreplySetDetailの中で個別対応している
@@ -826,7 +833,7 @@ class EchonetLite():
             return True
 
         for v in self.eojs:
-            # print(eoj, v)
+            # print(eoj, "=?=", v)
             if eoj[2] == 0:
                 if v[0:2] == eoj[0:2]:
                     # print("True")
@@ -859,15 +866,18 @@ class EchonetLite():
         packetSize = len(data)
         #  パケットサイズが最小サイズを満たさないならDrop
         if packetSize < EchonetLite.MINIMUM_FRAME:
+            # print("# verifyPacket() droped reason = packetSize:", packetSize) if self.debug else '' # debug
             return False
 
         # EHDがおかしいならDrop
         if data[EchonetLite.EHD1:EchonetLite.TID] != [0x10, 0x81]:
+            # print("# verifyPacket() droped reason = EHD:", data[EchonetLite.EHD1:EchonetLite.TID]) if self.debug else '' # debug
             return False
 
         # EOJ もってなければDrop
         deoj = data[EchonetLite.DEOJ:EchonetLite.ESV]
         if self.hasEOJs(deoj) == False:
+            # print("# verifyPacket() droped reason = DEOJ:", data[EchonetLite.DEOJ:EchonetLite.ESV]) if self.debug else '' # debug
             return False
 
         esv = data[EchonetLite.ESV]
@@ -892,15 +902,17 @@ class EchonetLite():
             # OPC
             while o < opc:
                 if i > packetSize: # サイズ超えた
+                    print("# verifyPacket() droped reason = OPC:", opc) if self.debug else '' # debug
                     return False # 異常パケット
                 i += 2 + data[i] # 2 byte 固定(EPC,PDC) + edtでindex更新
                 o += 1
         elif ( esv == EchonetLite.SETGET or
             esv == EchonetLite.SETGET_SNA or
             esv == EchonetLite.SETGET_RES ):
-            print('SETGET系は未実装です')
+            print("# verifyPacket() SETGET noticed") if self.debug else '' # debug
             return True
         else:
+            print("# verifyPacket() droped reason = unknown:", data) if self.debug else '' # debug
             return False
 
         return True

@@ -1,17 +1,13 @@
 #!/usr/bin/python3
 
 import sys
-#import ipget  #  インストール必要, for Linux
-import ipaddress
+import os
+import signal
 import time
 import datetime
-import threading
-import struct
 from EchonetLite import EchonetLite, PDCEDT
 
-
 args = sys.argv
-
 
 def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt:PDCEDT):
     """!
@@ -28,8 +24,8 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt:PDCEDT):
     @note SET必要な処理を記述する。プロパティの変化があれば、正しくデバイス情報をUpdateしておくことが重要
     """
     print("---------- Set")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
 
     if esv == EchonetLite.SETI or esv == EchonetLite.SETC:
         if epc == 0x80: # power
@@ -62,8 +58,8 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @note GET命令に関しては基本的に内部で処理で返却するので、一般にはここに何も記述しなくてよい。SET命令のときに、正しくデバイス情報をUpdateしておくことが重要
     """
     print("---------- Get")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -81,12 +77,12 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @note INF命令に関しては一般に、デバイス系では無視、コントローラー系では情報保持をすると思われる。
     """
     print("---------- INF, RES, SNA")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     return True
 
-
-el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
+# el = EchonetLite([[0x02,0x90,0x01]], options={"debug":True}) # General Lighting, debug on
+el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting, no debug
 el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
 el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
 el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
@@ -94,12 +90,24 @@ el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9
 
 el.begin(userSetFunc, userGetFunc, userInfFunc)
 
-while True:
-    # el.sendMultiOPC1('05ff01', '029001', '62', '80', '00')
-    now = datetime.datetime.now()
-    # print(frame)
-    # print(now.strftime("%Y年%m月%d日 %H時%M分%S秒"), "に送信されました。") # フォーマットして出力
-    time.sleep(60) # 1 min
+def loop():
+    while True:
+        # el.sendMultiOPC1('05ff01', '029001', '62', '80', '00')
+        now = datetime.datetime.now()
+        # print(frame)
+        # print(now.strftime("%Y年%m月%d日 %H時%M分%S秒"), "に送信されました。") # フォーマットして出力
+        time.sleep(60) # 1 min
 
 
-del el
+def handler(signum, frame):
+    # 何らかの処理
+    del el
+    sys.exit(0)
+
+signal.signal(signal.SIGFPE, handler)
+
+try:
+    loop()
+except:
+    print("except -> exit")
+    os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく
