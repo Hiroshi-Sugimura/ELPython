@@ -9,6 +9,7 @@
 
 import platform
 import os
+import sys
 import socket
 import binascii
 import struct
@@ -19,12 +20,14 @@ if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
 else:
     import threads
     import uuid # for mac
+if os.uname().sysname == 'rp2':
+    import ubinascii
 import re
 
-
 if __name__ == '__main__':
-    from PDCEDT import PDCEDT
-    from ELOBJ import ELOBJ
+    print("unit test")
+    from EchonetLite.PDCEDT import PDCEDT
+    from EchonetLite.ELOBJ import ELOBJ
 else:
     from EchonetLite.PDCEDT import PDCEDT
     from EchonetLite.ELOBJ import ELOBJ
@@ -68,6 +71,7 @@ class EchonetLite():
     SETGET_RES = 0x7e	# SETGET_RES
     EOJ_Controller = [0x05, 0xff, 0x01] # EOJ:Controller
     EOJ_NodeProfile = [0x0e, 0xf0, 0x01] # EOJ:NodeProfileObject
+    INADDR_ANY = 0x00000000 # MicroPython対応
 
     #  コンストラクタ
     def __init__(self, eojs = None, options = None):
@@ -83,9 +87,12 @@ class EchonetLite():
             if options["debug"] == True:
                 self.debug = True
 
+        print("# EchonetLite.init()") if self.debug else '' # debug
+
         # ip 設定
         if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-            localIP = WiFi.localIP()
+            wlan = network.WLAN(network.STA_IF)
+            self.LOCAL_ADDR = wlan.ifconfig()[0]
         elif platform.system() == 'Linux': # for Linux
             localIP = ipget.ipget()
             # print(localIP.ipaddr("wlan0"))
@@ -143,10 +150,13 @@ class EchonetLite():
         self.devices[k].SetMyPropertyMap(0x9d, [0x80, 0xd5])																	# inf property map
         self.devices[k].SetMyPropertyMap(0x9e, [0x80])																			# set property map
         self.devices[k].SetMyPropertyMap(0x9f, [0x80, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7]) # get property map
+
+        self.println() if self.debug else '' # debug
+
         # 受信ソケットの準備
         self.rsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.group = socket.inet_aton(EchonetLite.MULTICAST_GROUP)
-        self.mreq = struct.pack('4sL', self.group, socket.INADDR_ANY)
+        self.group = self.inet_aton(EchonetLite.MULTICAST_GROUP)
+        self.mreq = struct.pack('4sL', self.group, EchonetLite.INADDR_ANY)
         self.rsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, self.mreq)
         self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -155,6 +165,7 @@ class EchonetLite():
         """!
         @brief デストラクタ
         """
+        print("# EchonetLite.del()") if self.debug else '' # debug
         #  受信設定
         self.rsock.close()
 
@@ -171,6 +182,7 @@ class EchonetLite():
         @param pdcedt PDCEDT
         @return bool True固定
         """
+        print("# EchonetLite.dummyFunction()") if self.debug else '' # debug
         if self.debug:
             print('dummyFunction ', ip, tid, seoj, deoj, esv, opc, epc, pdcedt.printString())
         return True
@@ -183,6 +195,7 @@ class EchonetLite():
         @param gfunc Getの時に呼ばれる関数、設定しないならNoneでよい。省略すればNone
         @param ifunc 通知関係を受信した時に呼ばれる関数、設定しないならNoneでよい。省略すればNone
         """
+        print("# EchonetLite.begin()") if self.debug else '' # debug
         if sfunc != None:
             self.userSetFunc = sfunc
         if gfunc != None:
@@ -190,18 +203,39 @@ class EchonetLite():
         if ifunc != None:
             self.userInfFunc = ifunc
         # 受信設定
+        # self.rsock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.rsock.bind(('', self.ECHONETport))
         self.rsock.settimeout(1)
         def recv():
             while True:
-                try:
-                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                    # bytesを16進数文字列に変換する
-                    self.returner(ip[0], list(data))
-                except socket.timeout:
-                    continue
-        self.thread = _thread.start_new_thread(target=recv, args=())
-        self.thread.start() #  受信スレッド開始
+                if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                    try:
+                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                        # bytesを16進数文字列に変換する
+                        self.returner(ip[0], list(data))
+                    except OSError: # timeout
+                        continue
+                    except Exception as error:
+                        print(f"Exception in recv thread: {error}")
+                        sys.print_exception(error)
+                else:
+                    try:
+                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                        # bytesを16進数文字列に変換する
+                        self.returner(ip[0], list(data))
+                    except socket.timeout:
+                        continue
+                    except Exception as error:
+                        print(f"Exception in recv thread: {error}")
+                        sys.print_exception(error)
+        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            try:
+                self.thread = _thread.start_new_thread(recv, ()) #  受信スレッド開始
+            except Exception as error:
+                print(f"Exception in thread start: {error}")
+        else:
+            self.thread = threading.Thread(target=recv, args=())
+            self.thread.start() #  受信スレッド開始
         # インスタンスリスト通知 D5
         seoj = self.EOJ_NodeProfile
         deoj = self.EOJ_NodeProfile
@@ -209,6 +243,7 @@ class EchonetLite():
             self.sendMultiOPC1(seoj, deoj, self.INF, 0x80, self.devices['0ef001'][0x80]) # ON通知
         if self.devices['0ef001'][0xd5] != None:
             self.sendMultiOPC1(seoj, deoj, self.INF, 0xd5, self.devices['0ef001'][0xd5]) # オブジェクトリスト通知
+        print("# EchonetLite.begin() end.") if self.debug else '' # debug
 
 
     def update(self, obj, epc, edt):
@@ -218,6 +253,7 @@ class EchonetLite():
         @param epc int
         @param edt list[int]
         """
+        print("# EchonetLite.update()") if self.debug else '' # debug
         if type(obj) is list:
             obj = self.getHexString(obj)
 
@@ -226,6 +262,7 @@ class EchonetLite():
         else:
             self.devices[obj].SetEDT(epc, edt)
             self.checkInfAndSend(obj, epc)
+        print("# EchonetLite.update() end.") if self.debug else '' # debug
 
 
     #  送信
@@ -234,6 +271,8 @@ class EchonetLite():
         @brief ECHOENT Lite のデータ送信
         @param buffer (bytes|list[int]|str)
         """
+        print("# EchonetLite.send()") if self.debug else '' # debug
+
         if type(message) is list:
             buffer = bytes(message)
         elif type(message) is str:
@@ -244,8 +283,10 @@ class EchonetLite():
             return
 
         ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # ssock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         ssock.sendto(buffer, (ip, self.ECHONETport))
         ssock.close()
+        print("# EchonetLite.send() end.") if self.debug else '' # debug
 
 
     def sendOPC1TID(self, ip, tid, seoj, deoj, esv, epc, pdcedt):
@@ -260,6 +301,8 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendOPC1TID()") if self.debug else '' # debug
+
         if type(tid) is list:
             tid = self.getHexString(tid)
 
@@ -282,6 +325,7 @@ class EchonetLite():
 
         smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.send(ip, smsg)
+        print("# EchonetLite.send() sendOPC1TID.") if self.debug else '' # debug
 
     def sendOPC1(self, ip, seoj, deoj, esv, epc, pdcedt):
         """!
@@ -294,7 +338,10 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendOPC1()") if self.debug else '' # debug
         self.sendOPC1TID(ip, self.getTidString(), seoj, deoj, esv, epc, pdcedt)
+        print("# EchonetLite.sendOPC1() end.") if self.debug else '' # debug
+
 
     def sendDetails(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
@@ -308,6 +355,7 @@ class EchonetLite():
         @param details (Dict[int,PDCEDT])
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendDetails()") if self.debug else '' # debug
         if type(tid) == list:
             tid = self.getHexString(tid)
 
@@ -326,18 +374,21 @@ class EchonetLite():
         smsg = '1081' + tid + seoj + deoj + esv + opc
 
         for epc in details:
-            smsg += format(epc,'02x') + details[epc].getString()
+            #smsg += format(epc,'02x') + details[epc].getString()
+            smsg += '{:02X}'.format(epc) + details[epc].getString()
 
         if ip == self.MULTICAST_GROUP:
             self.sendMulti(smsg)
         else:
             self.send(ip, smsg)
+        print("# EchonetLite.send() sendDetails.") if self.debug else '' # debug
 
     def sendMulti(self, message):
         """!
         @brief マルチキャストの送信
         @param message (bytes | list[int] | str)
         """
+        print("# EchonetLite.sendMulti()") if self.debug else '' # debug
         if type(message) == list:
             buffer = bytes(message)
         elif type(message) == str:
@@ -347,10 +398,25 @@ class EchonetLite():
         else:
             return
 
-        ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ssock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.LOCAL_ADDR))
-        ssock.sendto(buffer, (EchonetLite.MULTICAST_GROUP, EchonetLite.ECHONETport))
-        ssock.close()
+        print("# EchonetLite.sendMulti() message:", message) if self.debug else '' # debug
+
+        try:
+            ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                # multiAddr = bytearray([224,0,23,0])
+                # ssock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, struct.pack('4sL', multiAddr))
+                ssock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                ssock.sendto(buffer, (EchonetLite.MULTICAST_GROUP, EchonetLite.ECHONETport))
+                ssock.close()
+            else:
+                ssock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, self.inet_aton(self.LOCAL_ADDR))
+                ssock.sendto(buffer, (EchonetLite.MULTICAST_GROUP, EchonetLite.ECHONETport))
+                ssock.close()
+        except Exception as error:
+            print("except in sendMulti()")
+            print(error)
+            sys.print_exception(error)
+        print("# EchonetLite.sendMulti() end.") if self.debug else '' # debug
 
 
     def sendMultiOPC1TID(self, tid, seoj, deoj, esv, epc, pdcedt):
@@ -365,6 +431,7 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendMultiOPC1TID()") if self.debug else '' # debug
         if type(tid) == list:
             tid = self.getHexString(tid)
 
@@ -387,6 +454,7 @@ class EchonetLite():
 
         smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.sendMulti(smsg)
+        print("# EchonetLite.sendMultiOPC1TID() end.") if self.debug else '' # debug
 
 
     def sendMultiOPC1(self, seoj, deoj, esv, epc, pdcedt):
@@ -400,9 +468,11 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendMultiOPC1()") if self.debug else '' # debug
         tid = self.getTidString()
         self.tidAutoIncrement()
         self.sendMultiOPC1TID( tid, seoj, deoj, esv, epc, pdcedt)
+        print("# EchonetLite.sendMultiOPC1() end.") if self.debug else '' # debug
 
     def sendGetPropertyMap(self, ip, eoj):
         """!
@@ -411,6 +481,7 @@ class EchonetLite():
         @param eoj (list[int]|str)
         """
         # プロファイルオブジェクトのときはプロパティマップももらうけど，識別番号ももらう
+        print("# EchonetLite.sendGetPropertyMap()") if self.debug else '' # debug
         pdcedts = {}
         if eoj[0:3] == [0x0e,0xf0,0x01]:
             pdcedts[0x83] = PDCEDT([0])
@@ -425,6 +496,8 @@ class EchonetLite():
             pdcedts[0x9f] = PDCEDT([0])
             self.sendDetails( ip, self.getTidString(), EchonetLite.EOJ_NodeProfile, eoj, EchonetLite.GET, 0x03, pdcedts)
         self.tidAutoIncrement()
+        print("# EchonetLite.sendGetPropertyMap() end.") if self.debug else '' # debug
+
 
     def replyGetDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
@@ -438,6 +511,7 @@ class EchonetLite():
         @param details (dict)
         @return bool
         """
+        print("# EchonetLite.replyGetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -456,6 +530,7 @@ class EchonetLite():
 
         # SEOJとDEOJが入れ替わる
         self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyGetDetail() end.") if self.debug else '' # debug
         return success
 
     def replyGetDetail_sub(self, eoj, epc):
@@ -466,6 +541,7 @@ class EchonetLite():
         @param epc int
         @return PDCEDT | None そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replyGetDetail_sub()") if self.debug else '' # debug
         if( eoj==self.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -487,6 +563,7 @@ class EchonetLite():
         @param details (dict)
         @return bool
         """
+        print("# EchonetLite.replySetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -515,6 +592,7 @@ class EchonetLite():
 
         # 返信用データはSEOJとDEOJが反転する
         self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replySetDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -526,6 +604,7 @@ class EchonetLite():
         @param epc int
         @return そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replySetDetail_sub()") if self.debug else '' # debug
         if( eoj==EchonetLite.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -547,6 +626,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replyInfreqDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -567,6 +647,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyInfreqDetail() end.") if self.debug else '' # debug
 
         return success
 
@@ -579,6 +660,7 @@ class EchonetLite():
         @param epc int
         @return そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replyInfreqDetail_sub()") if self.debug else '' # debug
         if( eoj==EchonetLite.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -601,6 +683,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replySetgetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -621,6 +704,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replySetgetDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -636,6 +720,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replyInfcDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -656,6 +741,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyInfcDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -666,7 +752,7 @@ class EchonetLite():
         @param data list[int]
         @return boolean  True=成功, False=失敗
         """
-        # print("# ---- returner()") if self.debug else '' # debug
+        print("# EchonetLite.returner()") if self.debug else '' # debug
         if self.verifyPacket(data) == False: # これ以降の解析をする価値があるか？
             # print("# returner() recv invalid data:", data) if self.debug else '' # debug
             return # 解析する価値なし、Drop
@@ -739,6 +825,7 @@ class EchonetLite():
         @param details (list[byte])  EPC以下
         @return list(pdcedt)
         """
+        print("# EchonetLite.parseDetails()") if self.debug else '' # debug
         sres = {} # set details
         gres = {} # get details
         ires = {} # inf details
@@ -793,6 +880,7 @@ class EchonetLite():
                 pdc = details[i+1]
                 ires[epc] = PDCEDT(details[i+1:i+pdc+2])
                 i += pdc+2
+        print("# EchonetLite.parseDetails() end.") if self.debug else '' # debug
         return {'SET': sres, 'GET':gres, 'INF':ires}
 
 
@@ -803,6 +891,7 @@ class EchonetLite():
         @param pdcedt PDCEDT
         @return List[int]
         """
+        print("# EchonetLite.parsePropertyMap()") if self.debug else '' # debug
         #pdcedt.println()
         edt = pdcedt.edt
         profNum = edt[0]
@@ -822,7 +911,7 @@ class EchonetLite():
                         # 下位 i-1
                         epc = ((bit + 8) << 4) + (i - 1)
                         profs.append( epc )
-
+        print("# EchonetLite.parsePropertyMap() end.") if self.debug else '' # debug
         return profs
 
 
@@ -833,6 +922,7 @@ class EchonetLite():
         @return bool
         @note インスタンス0は一つでもあればTrue
         """
+        print("# EchonetLite.hasEOJs()") if self.debug else '' # debug
         if (eoj == [0x0e,0xf0,0x00] or
             eoj == [0x0e,0xf0,0x01] or
             eoj == [0x0e,0xf0,0x02]):
@@ -856,6 +946,7 @@ class EchonetLite():
         @param obj List[int]|str
         @param epc int
         """
+        print("# EchonetLite.checkInfAndSend()") if self.debug else '' # debug
         if type(obj) == list:
             obj = self.getHexString(obj)
 
@@ -869,6 +960,7 @@ class EchonetLite():
         @param data (list)
         @return bool
         """
+        print("# EchonetLite.verifyPacket()") if self.debug else '' # debug
         packetSize = len(data)
         #  パケットサイズが最小サイズを満たさないならDrop
         if packetSize < EchonetLite.MINIMUM_FRAME:
@@ -940,6 +1032,7 @@ class EchonetLite():
         @brief 内部のTIDを1進める
         @note getTidString() の前に利用することを想定
         """
+        print("# EchonetLite.tidAutoIncrement()") if self.debug else '' # debug
         if self.tid[0] == 0xff and self.tid[1] == 0xff:
             self.tid[0] = 0
             self.tid[1] = 0
@@ -955,7 +1048,11 @@ class EchonetLite():
         @return str
         @note getTidString() の後に利用することを想定
         """
-        return format(self.tid[0],'02x') + format(self.tid[1],'02x')
+        print("# EchonetLite.getTidString()") if self.debug else '' # debug
+        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            return '{:02X}'.format(self.tid[0]) + '{:02X}'.format(self.tid[1])
+        else:
+            return format(self.tid[0],'02x') + format(self.tid[1],'02x')
 
     def getHexString(self, value):
         """!
@@ -963,11 +1060,18 @@ class EchonetLite():
         @param value (int | list[int])
         @return str
         """
+        print("# EchonetLite.getHexString()") if self.debug else '' # debug
         if type(value) == list:
-            hexArr = [format(i,'02x') for i in value]
+            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                hexArr = ['{:02x}'.format(i) for i in value]
+            else:
+                hexArr = [format(i,'02x') for i in value]
             return "".join(hexArr).lower()
         else:
-            return format(value,'02x')
+            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                return '{:02X}'.format(value)
+            else:
+                return format(value,'02x')
 
     def getInstanceList(self, value):
         """!
@@ -975,6 +1079,7 @@ class EchonetLite():
         @param value (list[list[int]])
         @return list[int]
         """
+        print("# EchonetLite.getInstanceList()") if self.debug else '' # debug
         num = len(value)
         flat = sum(value, [])  # flatten
         flat.insert(0, num)
@@ -986,6 +1091,7 @@ class EchonetLite():
         @param value (list[list[int]])
         @return list[int]
         """
+        print("# EchonetLite.getClassList()") if self.debug else '' # debug
         classList = [obj[0:2] for obj in value]
         uClassList = []
         # classListにあり、uClassListにないものを探してリストアップする
@@ -1006,11 +1112,13 @@ class EchonetLite():
         @brief Macアドレスを list[6] の型で求める
         @return list[int] size 6
         """
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-	        mac = machine.unique_id()
-	        macStr = ':'.join(re.findall('..', '%012x' % mac))
-    	    ar = macStr.split(':')[0:6]
-        	return [int(x,16) for x in ar]
+        print("# EchonetLite.getHwAddr()") if self.debug else '' # debug
+        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2': # raspberry pi pico w
+            wlan = network.WLAN(network.STA_IF)
+            wlan.active(True)
+            macStr = binascii.hexlify(network.WLAN().config('mac'),':').decode()
+            ar = macStr.split(':')[0:6]
+            return [int(x,16) for x in ar]
         elif platform.system() == 'Windows': # windows
             mac = uuid.getnode()
             macStr = ':'.join(re.findall('..', '%012x' % mac))
@@ -1023,11 +1131,31 @@ class EchonetLite():
             return [int(x,16) for x in ar]
         else:
             return [0,0,0,0,0,0]
-        
+
+    def inet_aton(self, ip):
+        """!
+        @brief IPアドレスを 文字列からバイト列に変換する。MicroPython では、socket モジュールの機能が標準の Python に比べて限定されているため、自作
+        @param ip str
+        @return bytes
+        """
+        print("# EchonetLite.inet_aton()") if self.debug else '' # debug
+        parts = ip.split('.')
+        return bytes([int(part) for part in parts])
 
 
 if __name__ == '__main__':
     print("===== echonet_lite.py unit test")
+    import time
+    WIFI_SSID = 'test'
+    WIFI_PASS = 'pass'
+    wlan = network.WLAN(network.STA_IF)      # WLANオブジェクトを作成
+    wlan.active(True)                        # WLANインタフェースを有効化
+    wlan.connect(WIFI_SSID, WIFI_PASS)             # 指定されたSSIDとパスワードでWi-Fiに接続する
+    while wlan.isconnected() == False:       # Wi-Fi接続が確立されるまで待機
+        # print('Waiting for connection...')
+        time.sleep(1)
+    print(wlan.ifconfig())                   # Wi-Fi接続情報を全て出力
+    ip = wlan.ifconfig()[0]                  # IPアドレスのみを取得
     el = EchonetLite( [EchonetLite.EOJ_Controller] )
     el.println()
     print("- parseDetails()")
