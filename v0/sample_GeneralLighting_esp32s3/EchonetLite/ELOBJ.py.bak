@@ -6,7 +6,7 @@
 @date 2023年度
 @details PDCEDTをEPCと結びつけて管理することを主とする
 """
-from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
+from copy import deepcopy
 
 if __name__ == '__main__':  # unit test
     from PDCEDT import PDCEDT

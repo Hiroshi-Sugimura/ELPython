@@ -6,7 +6,8 @@
 @date 2023年度
 @details EDTをPDCと結びつけて管理することを主とする
 """
-from copy import deepcopy
+import os
+from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
 
 class PDCEDT():
     """!
@@ -79,18 +80,25 @@ class PDCEDT():
         if self.edt==None:
             return '00'
         else:
-            hexArr = [format(i,'02x') for i in self.edt]
-            return format(self.pdc,'02x') + "".join(hexArr).lower()
+            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                hexArr = ['{:02X}'.format(i) for i in self.edt]
+                return '{:02X}'.format(self.pdc) + "".join(hexArr).lower()
+            else:
+                hexArr = [format(i,'02x') for i in self.edt]
+                return format(self.pdc,'02x') + "".join(hexArr).lower()
 
     def println(self):
         """!
         @brief 現在の格納データを標準出力する
         """
         if len(self.edt) == 0:
-            print("PDC:", format(self.pdc,'02x'), ", EDT: []" )
+            #print("PDC:", format(self.pdc,'02x'), ", EDT: []" )
+            print("PDC:", '{:02X}'.format(self.pdc), ", EDT: []" )
         else:
-            h = [format(i,'02x') for i in self.edt]
-            print("PDC:", format(self.pdc,'02x'), ", EDT:", ",".join(h) )
+            # h = [format(i,'02X') for i in self.edt]
+            h = ['{:02X}'.format(i) for i in self.edt]
+            # print("PDC:", format(self.pdc,'02x'), ", EDT:", ",".join(h) )
+            print("PDC:", '{:02X}'.format(self.pdc), ", EDT:", ",".join(h) )
 
     def printString(self) -> str:
         """!
@@ -99,10 +107,13 @@ class PDCEDT():
         """
         s = ""
         if len(self.edt) == 0:
-            s = "PDC:" + format(self.pdc,'02x') +", EDT: []"
+            # s = "PDC:" + format(self.pdc,'02x') +", EDT: []"
+            s = "PDC:" + '{:02X}'.format(self.pdc) +", EDT: []"
         else:
-            h = [format(i,'02x') for i in self.edt]
-            s = "PDC:" + format(self.pdc,'02x') + ", EDT:" + (",".join(h))
+            # h = [format(i,'02x') for i in self.edt]
+            h = ['{:02X}'.format(i) for i in self.edt]
+            # s = "PDC:" + format(self.pdc,'02x') + ", EDT:" + (",".join(h))
+            s = "PDC:" + '{:02X}'.format(self.pdc) + ", EDT:" + (",".join(h))
         return s
 
 

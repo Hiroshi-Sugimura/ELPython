@@ -1006,12 +1006,7 @@ class EchonetLite():
         @brief Macアドレスを list[6] の型で求める
         @return list[int] size 6
         """
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-	        mac = machine.unique_id()
-	        macStr = ':'.join(re.findall('..', '%012x' % mac))
-    	    ar = macStr.split(':')[0:6]
-        	return [int(x,16) for x in ar]
-        elif platform.system() == 'Windows': # windows
+        if platform.system() == 'Windows': # windows
             mac = uuid.getnode()
             macStr = ':'.join(re.findall('..', '%012x' % mac))
             ar = macStr.split(':')[0:6]
@@ -1023,7 +1018,7 @@ class EchonetLite():
             return [int(x,16) for x in ar]
         else:
             return [0,0,0,0,0,0]
-        
+
 
 
 if __name__ == '__main__':
