@@ -79,6 +79,8 @@ class EchonetLite():
             if options["debug"] == True:
                 self.debug = True
 
+        print("# EchonetLite.init()") if self.debug else '' # debug
+
         # ip 設定
         if platform.system() == 'Linux': # for Linux
             localIP = ipget.ipget()
@@ -149,6 +151,7 @@ class EchonetLite():
         """!
         @brief デストラクタ
         """
+        print("# EchonetLite.del()") if self.debug else '' # debug
         #  受信設定
         self.rsock.close()
 
@@ -165,6 +168,7 @@ class EchonetLite():
         @param pdcedt PDCEDT
         @return bool True固定
         """
+        print("# EchonetLite.dummyFunction()") if self.debug else '' # debug
         if self.debug:
             print('dummyFunction ', ip, tid, seoj, deoj, esv, opc, epc, pdcedt.printString())
         return True
@@ -177,6 +181,7 @@ class EchonetLite():
         @param gfunc Getの時に呼ばれる関数、設定しないならNoneでよい。省略すればNone
         @param ifunc 通知関係を受信した時に呼ばれる関数、設定しないならNoneでよい。省略すればNone
         """
+        print("# EchonetLite.begin()") if self.debug else '' # debug
         if sfunc != None:
             self.userSetFunc = sfunc
         if gfunc != None:
@@ -184,6 +189,7 @@ class EchonetLite():
         if ifunc != None:
             self.userInfFunc = ifunc
         # 受信設定
+        # self.rsock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.rsock.bind(('', self.ECHONETport))
         self.rsock.settimeout(1)
         def recv():
@@ -203,6 +209,7 @@ class EchonetLite():
             self.sendMultiOPC1(seoj, deoj, self.INF, 0x80, self.devices['0ef001'][0x80]) # ON通知
         if self.devices['0ef001'][0xd5] != None:
             self.sendMultiOPC1(seoj, deoj, self.INF, 0xd5, self.devices['0ef001'][0xd5]) # オブジェクトリスト通知
+        print("# EchonetLite.begin() end.") if self.debug else '' # debug
 
 
     def update(self, obj, epc, edt):
@@ -212,6 +219,7 @@ class EchonetLite():
         @param epc int
         @param edt list[int]
         """
+        print("# EchonetLite.update()") if self.debug else '' # debug
         if type(obj) is list:
             obj = self.getHexString(obj)
 
@@ -220,6 +228,7 @@ class EchonetLite():
         else:
             self.devices[obj].SetEDT(epc, edt)
             self.checkInfAndSend(obj, epc)
+        print("# EchonetLite.update() end.") if self.debug else '' # debug
 
 
     #  送信
@@ -228,6 +237,8 @@ class EchonetLite():
         @brief ECHOENT Lite のデータ送信
         @param buffer (bytes|list[int]|str)
         """
+        print("# EchonetLite.send()") if self.debug else '' # debug
+
         if type(message) is list:
             buffer = bytes(message)
         elif type(message) is str:
@@ -238,8 +249,10 @@ class EchonetLite():
             return
 
         ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # ssock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         ssock.sendto(buffer, (ip, self.ECHONETport))
         ssock.close()
+        print("# EchonetLite.send() end.") if self.debug else '' # debug
 
 
     def sendOPC1TID(self, ip, tid, seoj, deoj, esv, epc, pdcedt):
@@ -254,6 +267,8 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendOPC1TID()") if self.debug else '' # debug
+
         if type(tid) is list:
             tid = self.getHexString(tid)
 
@@ -276,6 +291,7 @@ class EchonetLite():
 
         smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.send(ip, smsg)
+        print("# EchonetLite.send() sendOPC1TID.") if self.debug else '' # debug
 
     def sendOPC1(self, ip, seoj, deoj, esv, epc, pdcedt):
         """!
@@ -288,7 +304,10 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendOPC1()") if self.debug else '' # debug
         self.sendOPC1TID(ip, self.getTidString(), seoj, deoj, esv, epc, pdcedt)
+        print("# EchonetLite.sendOPC1() end.") if self.debug else '' # debug
+
 
     def sendDetails(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
@@ -302,6 +321,7 @@ class EchonetLite():
         @param details (Dict[int,PDCEDT])
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendDetails()") if self.debug else '' # debug
         if type(tid) == list:
             tid = self.getHexString(tid)
 
@@ -326,12 +346,14 @@ class EchonetLite():
             self.sendMulti(smsg)
         else:
             self.send(ip, smsg)
+        print("# EchonetLite.send() sendDetails.") if self.debug else '' # debug
 
     def sendMulti(self, message):
         """!
         @brief マルチキャストの送信
         @param message (bytes | list[int] | str)
         """
+        print("# EchonetLite.sendMulti()") if self.debug else '' # debug
         if type(message) == list:
             buffer = bytes(message)
         elif type(message) == str:
@@ -359,6 +381,7 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendMultiOPC1TID()") if self.debug else '' # debug
         if type(tid) == list:
             tid = self.getHexString(tid)
 
@@ -381,6 +404,7 @@ class EchonetLite():
 
         smsg = '1081' + tid + seoj + deoj + esv + '01' + epc + pdcedt
         self.sendMulti(smsg)
+        print("# EchonetLite.sendMultiOPC1TID() end.") if self.debug else '' # debug
 
 
     def sendMultiOPC1(self, seoj, deoj, esv, epc, pdcedt):
@@ -394,9 +418,11 @@ class EchonetLite():
         @param pdcedt (PDCEDT|str)
         @note detailsはkey=epc:int、value=PDCEDT()のdict
         """
+        print("# EchonetLite.sendMultiOPC1()") if self.debug else '' # debug
         tid = self.getTidString()
         self.tidAutoIncrement()
         self.sendMultiOPC1TID( tid, seoj, deoj, esv, epc, pdcedt)
+        print("# EchonetLite.sendMultiOPC1() end.") if self.debug else '' # debug
 
     def sendGetPropertyMap(self, ip, eoj):
         """!
@@ -405,6 +431,7 @@ class EchonetLite():
         @param eoj (list[int]|str)
         """
         # プロファイルオブジェクトのときはプロパティマップももらうけど，識別番号ももらう
+        print("# EchonetLite.sendGetPropertyMap()") if self.debug else '' # debug
         pdcedts = {}
         if eoj[0:3] == [0x0e,0xf0,0x01]:
             pdcedts[0x83] = PDCEDT([0])
@@ -419,6 +446,8 @@ class EchonetLite():
             pdcedts[0x9f] = PDCEDT([0])
             self.sendDetails( ip, self.getTidString(), EchonetLite.EOJ_NodeProfile, eoj, EchonetLite.GET, 0x03, pdcedts)
         self.tidAutoIncrement()
+        print("# EchonetLite.sendGetPropertyMap() end.") if self.debug else '' # debug
+
 
     def replyGetDetail(self, ip, tid, seoj, deoj, esv, opc, details):
         """!
@@ -432,6 +461,7 @@ class EchonetLite():
         @param details (dict)
         @return bool
         """
+        print("# EchonetLite.replyGetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -450,6 +480,7 @@ class EchonetLite():
 
         # SEOJとDEOJが入れ替わる
         self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyGetDetail() end.") if self.debug else '' # debug
         return success
 
     def replyGetDetail_sub(self, eoj, epc):
@@ -460,6 +491,7 @@ class EchonetLite():
         @param epc int
         @return PDCEDT | None そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replyGetDetail_sub()") if self.debug else '' # debug
         if( eoj==self.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -481,6 +513,7 @@ class EchonetLite():
         @param details (dict)
         @return bool
         """
+        print("# EchonetLite.replySetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -509,6 +542,7 @@ class EchonetLite():
 
         # 返信用データはSEOJとDEOJが反転する
         self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replySetDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -520,6 +554,7 @@ class EchonetLite():
         @param epc int
         @return そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replySetDetail_sub()") if self.debug else '' # debug
         if( eoj==EchonetLite.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -541,6 +576,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replyInfreqDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -561,6 +597,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyInfreqDetail() end.") if self.debug else '' # debug
 
         return success
 
@@ -573,6 +610,7 @@ class EchonetLite():
         @param epc int
         @return そのプロパティのPDCEDT、存在しなければNone
         """
+        print("# EchonetLite.replyInfreqDetail_sub()") if self.debug else '' # debug
         if( eoj==EchonetLite.EOJ_NodeProfile ):
             return self.devices['0ef001'][epc]
         else:
@@ -595,6 +633,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replySetgetDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -615,6 +654,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replySetgetDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -630,6 +670,7 @@ class EchonetLite():
         @param details dict
         @return bool
         """
+        print("# EchonetLite.replyInfcDetail()") if self.debug else '' # debug
         success = True
         rep_details = {}  # 返信用のEPC,PDC,EDT[PDC]をすべて並べる
 
@@ -650,6 +691,7 @@ class EchonetLite():
             # 失敗したらユニキャストでINF_SNA
             esv = EchonetLite.INF_SNA
             self.sendDetails(ip, tid, deoj, seoj, esv, opc, rep_details)
+        print("# EchonetLite.replyInfcDetail() end.") if self.debug else '' # debug
         return success
 
 
@@ -660,7 +702,7 @@ class EchonetLite():
         @param data list[int]
         @return boolean  True=成功, False=失敗
         """
-        # print("# ---- returner()") if self.debug else '' # debug
+        print("# EchonetLite.returner()") if self.debug else '' # debug
         if self.verifyPacket(data) == False: # これ以降の解析をする価値があるか？
             # print("# returner() recv invalid data:", data) if self.debug else '' # debug
             return # 解析する価値なし、Drop
@@ -733,6 +775,7 @@ class EchonetLite():
         @param details (list[byte])  EPC以下
         @return list(pdcedt)
         """
+        print("# EchonetLite.parseDetails()") if self.debug else '' # debug
         sres = {} # set details
         gres = {} # get details
         ires = {} # inf details
@@ -787,6 +830,7 @@ class EchonetLite():
                 pdc = details[i+1]
                 ires[epc] = PDCEDT(details[i+1:i+pdc+2])
                 i += pdc+2
+        print("# EchonetLite.parseDetails() end.") if self.debug else '' # debug
         return {'SET': sres, 'GET':gres, 'INF':ires}
 
 
@@ -797,6 +841,7 @@ class EchonetLite():
         @param pdcedt PDCEDT
         @return List[int]
         """
+        print("# EchonetLite.parsePropertyMap()") if self.debug else '' # debug
         #pdcedt.println()
         edt = pdcedt.edt
         profNum = edt[0]
@@ -816,7 +861,7 @@ class EchonetLite():
                         # 下位 i-1
                         epc = ((bit + 8) << 4) + (i - 1)
                         profs.append( epc )
-
+        print("# EchonetLite.parsePropertyMap() end.") if self.debug else '' # debug
         return profs
 
 
@@ -827,6 +872,7 @@ class EchonetLite():
         @return bool
         @note インスタンス0は一つでもあればTrue
         """
+        print("# EchonetLite.hasEOJs()") if self.debug else '' # debug
         if (eoj == [0x0e,0xf0,0x00] or
             eoj == [0x0e,0xf0,0x01] or
             eoj == [0x0e,0xf0,0x02]):
@@ -850,6 +896,7 @@ class EchonetLite():
         @param obj List[int]|str
         @param epc int
         """
+        print("# EchonetLite.checkInfAndSend()") if self.debug else '' # debug
         if type(obj) == list:
             obj = self.getHexString(obj)
 
@@ -863,6 +910,7 @@ class EchonetLite():
         @param data (list)
         @return bool
         """
+        print("# EchonetLite.verifyPacket()") if self.debug else '' # debug
         packetSize = len(data)
         #  パケットサイズが最小サイズを満たさないならDrop
         if packetSize < EchonetLite.MINIMUM_FRAME:
@@ -934,6 +982,7 @@ class EchonetLite():
         @brief 内部のTIDを1進める
         @note getTidString() の前に利用することを想定
         """
+        print("# EchonetLite.tidAutoIncrement()") if self.debug else '' # debug
         if self.tid[0] == 0xff and self.tid[1] == 0xff:
             self.tid[0] = 0
             self.tid[1] = 0
@@ -957,6 +1006,7 @@ class EchonetLite():
         @param value (int | list[int])
         @return str
         """
+        print("# EchonetLite.getHexString()") if self.debug else '' # debug
         if type(value) == list:
             hexArr = [format(i,'02x') for i in value]
             return "".join(hexArr).lower()
@@ -969,6 +1019,7 @@ class EchonetLite():
         @param value (list[list[int]])
         @return list[int]
         """
+        print("# EchonetLite.getInstanceList()") if self.debug else '' # debug
         num = len(value)
         flat = sum(value, [])  # flatten
         flat.insert(0, num)
@@ -980,6 +1031,7 @@ class EchonetLite():
         @param value (list[list[int]])
         @return list[int]
         """
+        print("# EchonetLite.getClassList()") if self.debug else '' # debug
         classList = [obj[0:2] for obj in value]
         uClassList = []
         # classListにあり、uClassListにないものを探してリストアップする
