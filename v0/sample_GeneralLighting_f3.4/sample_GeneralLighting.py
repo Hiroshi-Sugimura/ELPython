@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# for Python v3.4
 
 import sys
 import os
@@ -9,7 +10,7 @@ from EchonetLite import EchonetLite, PDCEDT
 
 args = sys.argv
 
-def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt:PDCEDT):
+def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     """!
     @brief SET系（SETI、SETC、SETGET）命令を受け取った時に処理するものがあればここに記述
     @param ip (str)
@@ -93,13 +94,6 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     return True
 
 
-el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
-el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
-el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
-el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
-# el.println() # 設定確認
-
-el.begin(userSetFunc, userGetFunc, userInfFunc)
 
 def loop():
     while True:
@@ -118,7 +112,19 @@ def handler(signum, frame):
 signal.signal(signal.SIGFPE, handler)
 
 try:
+    #el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
+    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":False}) # General Lighting
+    el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
+    el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
+    el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
+    # el.println() # 設定確認
+    el.begin(userSetFunc, userGetFunc, userInfFunc)
     loop()
-except:
+except Exception as error:
     print("except -> exit")
-    os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく
+    print(error)
+    sys.print_exception(error)
+    if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+        print("plz reboot")
+    else:
+        os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく

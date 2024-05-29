@@ -112,7 +112,7 @@ def loop():
         time.sleep(60) # 1 min
 
 try:
-    print('ip:', connect() )
+    print('ip:', connect() ) # WiFi接続
     #el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
     el = EchonetLite([[0x02,0x90,0x01]], options={"debug":False}) # General Lighting
     el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
