@@ -188,9 +188,9 @@ class EchonetLite():
         def recv():
             while True:
                 try:
-                data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                # bytesを16進数文字列に変換する
-                self.returner(ip[0], list(data))
+                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                    # bytesを16進数文字列に変換する
+                    self.returner(ip[0], list(data))
                 except socket.timeout:
                     continue
         self.thread = threading.Thread(target=recv, args=())
