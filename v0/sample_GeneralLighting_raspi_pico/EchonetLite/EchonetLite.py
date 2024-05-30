@@ -21,14 +21,15 @@ else:
     env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
 
 if env == 'Linux' or env == 'mac' or env == 'Windows':
-    import threads
+    import threading
     import uuid # for mac
+    import binascii
 else:
     import machine
-    import asyncio
     import network # for ip
     import ubinascii
 
+import asyncio
 import socket
 import struct
 import re
@@ -215,38 +216,10 @@ class EchonetLite():
         # self.rsock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.rsock.bind(('', self.ECHONETport))
         self.rsock.settimeout(10)
-        async def recv():
-            while True:
-                if env == 'esp32' or env == 'rp2':
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except OSError as error: # timeout
-                        # print(f"OSError in recv thread: {error}")
-                        continue
-                    except Exception as error:
-                        print(f"Exception in recv thread: {error}")
-                        sys.print_exception(error)
-                else:
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except socket.timeout:
-                        continue
-                    except Exception as error:
-                        print(f"Exception in recv thread: {error}")
-                        sys.print_exception(error)
-        if env == 'esp32' or env == 'rp2':
-            try:
-                # self.thread = _thread.start_new_thread(recv, ()) #  受信スレッド開始
-                asyncio.run(recv())
-            except Exception as error:
-                print(f"Exception in thread start: {error}")
-        else:
-            self.thread = threading.Thread(target=recv, args=())
-            self.thread.start() #  受信スレッド開始
+        try:
+            asyncio.run(self.recv())
+        except Exception as error:
+            print("Exception in thread start:", error)
         # インスタンスリスト通知 D5
         seoj = self.EOJ_NodeProfile
         deoj = self.EOJ_NodeProfile
@@ -255,6 +228,31 @@ class EchonetLite():
         if self.devices['0ef001'][0xd5] != None:
             self.sendMultiOPC1(seoj, deoj, self.INF, 0xd5, self.devices['0ef001'][0xd5]) # オブジェクトリスト通知
         print("# EchonetLite.begin() end.") if self.debug else '' # debug
+
+    @asyncio.coroutine
+    def recv(self):
+        while True:
+            if env == 'esp32' or env == 'rp2':
+                try:
+                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                    # bytesを16進数文字列に変換する
+                    self.returner(ip[0], list(data))
+                except OSError as error: # timeout
+                    # print(f"OSError in recv thread: {error}")
+                    continue
+                except Exception as error:
+                    print("Exception in recv thread:", error)
+                    sys.print_exception(error)
+            else:
+                try:
+                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                    # bytesを16進数文字列に変換する
+                    self.returner(ip[0], list(data))
+                except socket.timeout:
+                    continue
+                except Exception as error:
+                    print("Exception in recv thread:", error)
+                    sys.print_exception(error)
 
 
     def update(self, obj, epc, edt):
@@ -288,7 +286,10 @@ class EchonetLite():
         if type(message) is list:
             buffer = bytes(message)
         elif type(message) is str:
-            buffer = ubinascii.unhexlify(message)
+            if env == 'esp32' or env == 'rp2':
+                buffer = ubinascii.unhexlify(message)
+            else:
+                buffer = binascii.unhexlify(message)
         elif type(message) is bytes:
             buffer = message
         else:
@@ -405,7 +406,10 @@ class EchonetLite():
         if type(message) == list:
             buffer = bytes(message)
         elif type(message) == str:
-            buffer = ubinascii.unhexlify(message)
+            if env == 'esp32' or env == 'rp2':
+                buffer = ubinascii.unhexlify(message)
+            else:
+                buffer = binascii.unhexlify(message)
         elif type(message) == bytes:
             buffer = message
         else:

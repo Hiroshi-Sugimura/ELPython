@@ -6,7 +6,17 @@
 @date 2023年度
 @details EDTをPDCと結びつけて管理することを主とする
 """
+import platform
 import os
+env = '' # マイコンやOS
+
+if hasattr(os, 'name'):
+    env = platform.system() # Windows, Linux, Darwin
+elif hasattr(os, 'uname'):
+    env = os.uname().sysname # esp32, rp2
+else:
+    env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
+
 from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
 
 class PDCEDT():
@@ -80,7 +90,7 @@ class PDCEDT():
         if self.edt==None:
             return '00'
         else:
-            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            if env == 'esp32' or env == 'rp2':
                 hexArr = ['{:02X}'.format(i) for i in self.edt]
                 return '{:02X}'.format(self.pdc) + "".join(hexArr).lower()
             else:
