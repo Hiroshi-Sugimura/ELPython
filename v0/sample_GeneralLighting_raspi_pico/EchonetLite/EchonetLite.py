@@ -10,17 +10,27 @@
 import platform
 import os
 import sys
-import socket
-import struct
+
+env = '' # マイコンやOS
+
 if hasattr(os, 'name'):
+    env = platform.system() # Windows, Linux, Darwin
+elif hasattr(os, 'uname'):
+    env = os.uname().sysname # esp32, rp2
+else:
+    env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
+
+if env == 'Linux' or env == 'mac' or env == 'Windows':
     import threads
     import uuid # for mac
-elif os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+else:
     import machine
-    # import _thread # thread
     import asyncio
     import network # for ip
     import ubinascii
+
+import socket
+import struct
 import re
 
 if __name__ == '__main__':
@@ -89,14 +99,14 @@ class EchonetLite():
         print("# EchonetLite.init()") if self.debug else '' # debug
 
         # ip 設定
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+        if env == 'esp32' or env == 'rp2':
             wlan = network.WLAN(network.STA_IF)
             self.LOCAL_ADDR = wlan.ifconfig()[0]
-        elif platform.system() == 'Linux': # for Linux
+        elif env == 'Linux': # for Linux
             localIP = ipget.ipget()
             # print(localIP.ipaddr("wlan0"))
             self.LOCAL_ADDR = str(localIP.ipaddr("wlan0")).split('/')[0] # for Linux
-        elif platform.system() == 'Darwin': # mac
+        elif env == 'Darwin': # mac
             self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for mac
         else:
             self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for windows
@@ -207,7 +217,7 @@ class EchonetLite():
         self.rsock.settimeout(10)
         async def recv():
             while True:
-                if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                if env == 'esp32' or env == 'rp2':
                     try:
                         data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
                         # bytesを16進数文字列に変換する
@@ -228,7 +238,7 @@ class EchonetLite():
                     except Exception as error:
                         print(f"Exception in recv thread: {error}")
                         sys.print_exception(error)
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+        if env == 'esp32' or env == 'rp2':
             try:
                 # self.thread = _thread.start_new_thread(recv, ()) #  受信スレッド開始
                 asyncio.run(recv())
@@ -405,7 +415,7 @@ class EchonetLite():
 
         try:
             ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            if env == 'esp32' or env == 'rp2':
                 # multiAddr = bytearray([224,0,23,0])
                 # ssock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, struct.pack('4sL', multiAddr))
                 ssock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -1052,7 +1062,7 @@ class EchonetLite():
         @note getTidString() の後に利用することを想定
         """
         print("# EchonetLite.getTidString()") if self.debug else '' # debug
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+        if env == 'esp32' or env == 'rp2':
             return '{:02X}'.format(self.tid[0]) + '{:02X}'.format(self.tid[1])
         else:
             return format(self.tid[0],'02x') + format(self.tid[1],'02x')
@@ -1065,13 +1075,13 @@ class EchonetLite():
         """
         print("# EchonetLite.getHexString()") if self.debug else '' # debug
         if type(value) == list:
-            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            if env == 'esp32' or env == 'rp2':
                 hexArr = ['{:02x}'.format(i) for i in value]
             else:
                 hexArr = [format(i,'02x') for i in value]
             return "".join(hexArr).lower()
         else:
-            if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+            if env == 'esp32' or env == 'rp2':
                 return '{:02X}'.format(value)
             else:
                 return format(value,'02x')
@@ -1116,18 +1126,18 @@ class EchonetLite():
         @return list[int] size 6
         """
         print("# EchonetLite.getHwAddr()") if self.debug else '' # debug
-        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2': # raspberry pi pico w
+        if env == 'esp32' or env == 'rp2': # raspberry pi pico w
             wlan = network.WLAN(network.STA_IF)
             wlan.active(True)
             macStr = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
             ar = macStr.split(':')[0:6]
             return [int(x,16) for x in ar]
-        elif platform.system() == 'Windows': # windows
+        elif env == 'Windows': # windows
             mac = uuid.getnode()
             macStr = ':'.join(re.findall('..', '%012x' % mac))
             ar = macStr.split(':')[0:6]
             return [int(x,16) for x in ar]
-        elif platform.system() == 'Darwin': # Mac
+        elif env == 'Darwin': # Mac
             mac = uuid.getnode()
             macStr = ':'.join(re.findall('..', '%012x' % mac))
             ar = macStr.split(':')[0:6]

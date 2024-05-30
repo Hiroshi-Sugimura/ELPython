@@ -126,8 +126,8 @@ try:
 except Exception as error:
     print("| except -> exit")
     print(error)
-    sys.print_exception(error)
     if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+        sys.print_exception(error)
         print("| plz reboot")
     else:
         os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく

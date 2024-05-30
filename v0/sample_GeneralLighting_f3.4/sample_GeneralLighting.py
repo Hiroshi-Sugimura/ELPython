@@ -7,6 +7,7 @@ import signal
 import time
 import datetime
 from EchonetLite import EchonetLite, PDCEDT
+import traceback
 
 args = sys.argv
 
@@ -28,8 +29,8 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     if deoj != [0x02,0x90,0x01]:
         return False
     print("---------- Set")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
 
     if esv == EchonetLite.SETI or esv == EchonetLite.SETC:
         if epc == 0x80: # power
@@ -62,13 +63,13 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @note GET命令に関しては基本的に内部で処理で返却するので、一般にはここに何も記述しなくてよい。SET命令のときに、正しくデバイス情報をUpdateしておくことが重要
     """
     print("---------- Get")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
-        print("The object is not managed.")
+        print("| The object is not managed.")
         return False
-    print("The object is managed.")
+    print("| The object is managed.")
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -89,24 +90,20 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     if deoj != [0x02,0x90,0x01]:
         return False
     print("---------- INF, RES, SNA")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     return True
 
 
 
 def loop():
     while True:
-        # el.sendMultiOPC1('05ff01', '029001', '62', '80', '00')
-        now = datetime.datetime.now()
-        # print(frame)
-        # print(now.strftime("%Y年%m月%d日 %H時%M分%S秒"), "に送信されました。") # フォーマットして出力
         time.sleep(60) # 1 min
 
 
 def handler(signum, frame):
     # 何らかの処理
-    del el
+    print('| hundler')
     sys.exit(0)
 
 signal.signal(signal.SIGFPE, handler)
@@ -119,12 +116,14 @@ try:
     el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
     # el.println() # 設定確認
     el.begin(userSetFunc, userGetFunc, userInfFunc)
+    print("| start")
     loop()
 except Exception as error:
-    print("except -> exit")
+    print("| except -> exit")
     print(error)
-    sys.print_exception(error)
-    if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-        print("plz reboot")
+    if hasattr(os, 'uname'):
+        sys.print_exception(error)
+        print("| plz reboot")
     else:
+        traceback.print_exc()
         os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく
