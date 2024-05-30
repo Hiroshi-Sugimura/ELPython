@@ -92,8 +92,8 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     return True
 
-WIFI_SSID = 'Searching…'
-WIFI_PASS = '0120444444'
+WIFI_SSID = 'sugilab'
+WIFI_PASS = '4428211065122'
 
 # Wi-Fi 接続実行関数
 def connect():

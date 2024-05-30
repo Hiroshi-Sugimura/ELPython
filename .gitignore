@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 v0/sample_GeneralLighting_f3.10/EchonetLite/
 v0/sample_GeneralLighting_f3.4/EchonetLite/
+*.bak

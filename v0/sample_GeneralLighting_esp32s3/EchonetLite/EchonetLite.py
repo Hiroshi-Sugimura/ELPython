@@ -11,17 +11,15 @@ import platform
 import os
 import sys
 import socket
-import binascii
 import struct
 if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
     import machine
     import _thread # thread
     import network # for ip
+    import binascii
 else:
     import threads
     import uuid # for mac
-if os.uname().sysname == 'rp2':
-    import ubinascii
 import re
 
 if __name__ == '__main__':

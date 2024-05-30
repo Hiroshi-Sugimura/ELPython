@@ -9,18 +9,17 @@
 
 import platform
 import os
+import sys
 import socket
-import binascii
 import struct
 if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
     import machine
     import _thread # thread
     import network # for ip
+    import binascii
 else:
     import threads
     import uuid # for mac
-if os.uname().sysname == 'rp2':
-    import ubinascii
 import re
 
 if __name__ == '__main__':
@@ -207,15 +206,26 @@ class EchonetLite():
         self.rsock.settimeout(1)
         def recv():
             while True:
-                try:
-                    data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                    # bytesを16進数文字列に変換する
-                    self.returner(ip[0], list(data))
-                except socket.timeout:
-                    continue
-                except Exception as error:
-                    print(f"Exception in recv thread: {error}")
-                    print("Traceback:", traceback.format_exc())
+                if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
+                    try:
+                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                        # bytesを16進数文字列に変換する
+                        self.returner(ip[0], list(data))
+                    except OSError: # timeout
+                        continue
+                    except Exception as error:
+                        print(f"Exception in recv thread: {error}")
+                        sys.print_exception(error)
+                else:
+                    try:
+                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                        # bytesを16進数文字列に変換する
+                        self.returner(ip[0], list(data))
+                    except socket.timeout:
+                        continue
+                    except Exception as error:
+                        print(f"Exception in recv thread: {error}")
+                        sys.print_exception(error)
         if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
             try:
                 self.thread = _thread.start_new_thread(recv, ()) #  受信スレッド開始
@@ -271,7 +281,7 @@ class EchonetLite():
             return
 
         ssock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        ssock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # ssock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         ssock.sendto(buffer, (ip, self.ECHONETport))
         ssock.close()
         print("# EchonetLite.send() end.") if self.debug else '' # debug
@@ -1101,15 +1111,10 @@ class EchonetLite():
         @return list[int] size 6
         """
         print("# EchonetLite.getHwAddr()") if self.debug else '' # debug
-        if os.uname().sysname == 'esp32':
-            mac = machine.unique_id()
-            macStr = ':'.join(re.findall('..', '%012x' % mac))
-            ar = macStr.split(':')[0:6]
-            return [int(x,16) for x in ar]
-        elif os.uname().sysname == 'rp2': # raspberry pi pico w
+        if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2': # raspberry pi pico w
             wlan = network.WLAN(network.STA_IF)
             wlan.active(True)
-            macStr = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
+            macStr = binascii.hexlify(network.WLAN().config('mac'),':').decode()
             ar = macStr.split(':')[0:6]
             return [int(x,16) for x in ar]
         elif platform.system() == 'Windows': # windows

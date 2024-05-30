@@ -8,6 +8,7 @@
 """
 
 import platform
+import os
 import socket
 import binascii
 if platform.system() == 'Linux':
