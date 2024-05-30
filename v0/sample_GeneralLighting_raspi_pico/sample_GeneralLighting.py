@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # for rasp pi pico w
 
+import machine
 import sys
 import os
 import time
 import network
 from EchonetLite import EchonetLite, PDCEDT
 
-args = sys.argv
+led = machine.Pin("LED", machine.Pin.OUT)
 
 def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     """!
@@ -26,17 +27,19 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- Set")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- Set")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
 
     if esv == EchonetLite.SETI or esv == EchonetLite.SETC:
         if epc == 0x80: # power
             if pdcedt.edt == [0x30]:
                 print('Power ON')
+                led.on()
                 el.update(deoj, epc, pdcedt.edt)
             elif pdcedt.edt == [0x31]:
                 print('Power OFF')
+                led.off()
                 el.update(deoj, epc, pdcedt.edt)
         elif epc == 0x81: # 設置場所
             el.update(deoj, epc, pdcedt.edt)
@@ -60,14 +63,14 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @return bool 成功=True, 失敗=False、プロパティがあればTrueにする
     @note GET命令に関しては基本的に内部で処理で返却するので、一般にはここに何も記述しなくてよい。SET命令のときに、正しくデバイス情報をUpdateしておくことが重要
     """
-    print("---------- Get")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- Get")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
-        print("The object is not managed.")
+        print("| The object is not managed.")
         return False
-    print("The object is managed.")
+    print("| The object is managed.")
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -87,9 +90,9 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- INF, RES, SNA")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- INF, RES, SNA")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     return True
 
 WIFI_SSID = 'sugilab'
@@ -103,7 +106,6 @@ def connect():
     while wlan.isconnected() == False:       # Wi-Fi接続が確立されるまで待機
         # print('Waiting for connection...')
         time.sleep(1)
-    print(wlan.ifconfig())                   # Wi-Fi接続情報を全て出力
     ip = wlan.ifconfig()[0]                  # IPアドレスのみを取得
     return ip                                # IPアドレスを返す
 
@@ -112,9 +114,9 @@ def loop():
         time.sleep(10) # 10 sec
 
 try:
-    print('ip:', connect() ) # WiFi接続
+    print('| IP:', connect() ) # WiFi接続
     #el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
-    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":False}) # General Lighting
+    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":True}) # General Lighting
     el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
     el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
     el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
@@ -122,10 +124,10 @@ try:
     el.begin(userSetFunc, userGetFunc, userInfFunc)
     loop()
 except Exception as error:
-    print("except -> exit")
+    print("| except -> exit")
     print(error)
     sys.print_exception(error)
     if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-        print("plz reboot")
+        print("| plz reboot")
     else:
         os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく
