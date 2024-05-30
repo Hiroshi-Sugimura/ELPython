@@ -111,7 +111,7 @@ def connect():
 
 def loop():
     while True:
-        time.sleep(10) # 10 sec
+        time.sleep(60) # 1 min
 
 try:
     print('| IP:', connect() ) # WiFi接続

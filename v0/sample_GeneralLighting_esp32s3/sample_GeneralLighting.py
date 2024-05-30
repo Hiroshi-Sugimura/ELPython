@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # for rasp pi pico w
 
+import machine
 import sys
 import os
 import time
@@ -26,9 +27,10 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- Set")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- Set")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|------------------------")
 
     if esv == EchonetLite.SETI or esv == EchonetLite.SETC:
         if epc == 0x80: # power
@@ -60,14 +62,16 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @return bool 成功=True, 失敗=False、プロパティがあればTrueにする
     @note GET命令に関しては基本的に内部で処理で返却するので、一般にはここに何も記述しなくてよい。SET命令のときに、正しくデバイス情報をUpdateしておくことが重要
     """
-    print("---------- Get")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- Get")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
-        print("The object is not managed.")
+        print("| The object is NOT managed.")
+        print("|------------------------")
         return False
-    print("The object is managed.")
+    print("| The object is managed.")
+    print("|------------------------")
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -87,13 +91,14 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- INF, RES, SNA")
-    print("from:", ip)
-    print("TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|--------- INF, RES, SNA")
+    print("| from:", ip)
+    print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|------------------------")
     return True
 
-WIFI_SSID = 'sugilab'
-WIFI_PASS = '4428211065122'
+WIFI_SSID = 'ssid'
+WIFI_PASS = 'pass'
 
 # Wi-Fi 接続実行関数
 def connect():
@@ -103,29 +108,29 @@ def connect():
     while wlan.isconnected() == False:       # Wi-Fi接続が確立されるまで待機
         # print('Waiting for connection...')
         time.sleep(1)
-    print(wlan.ifconfig())                   # Wi-Fi接続情報を全て出力
     ip = wlan.ifconfig()[0]                  # IPアドレスのみを取得
     return ip                                # IPアドレスを返す
 
 def loop():
     while True:
-        time.sleep(60) # 1 min
+        time.sleep(1) # 1 min
 
 try:
-    print('ip:', connect() ) # WiFi接続
+    print('| IP:', connect() ) # WiFi接続
     #el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
-    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":False}) # General Lighting
+    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":True}) # General Lighting
     el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
     el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
     el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
     # el.println() # 設定確認
     el.begin(userSetFunc, userGetFunc, userInfFunc)
+    print("| start")
     loop()
 except Exception as error:
-    print("except -> exit")
+    print("| except -> exit")
     print(error)
-    sys.print_exception(error)
     if os.uname().sysname == 'esp32' or os.uname().sysname == 'rp2':
-        print("plz reboot")
+        sys.print_exception(error)
+        print("| plz reboot")
     else:
         os._exit(0) # sys.exitではwindowsの受信ソケットが解放されないので仕方なく

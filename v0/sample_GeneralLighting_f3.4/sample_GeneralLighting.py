@@ -100,7 +100,6 @@ def loop():
     while True:
         time.sleep(60) # 1 min
 
-
 def handler(signum, frame):
     # 何らかの処理
     print('| hundler')
