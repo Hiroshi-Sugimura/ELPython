@@ -170,8 +170,7 @@ class EchonetLite():
         self.rsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, self.mreq)
         self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
-        # self.rsock.settimeout(1) # 1秒でタイムアウト
-        self.rsock.setblocking(False) # timeoutのかわりにノンブロッキングでもいいかも
+        self.rsock.setblocking(False) # ノンブロッキング必須
 
     #  デストラクタ
     def __del__(self):

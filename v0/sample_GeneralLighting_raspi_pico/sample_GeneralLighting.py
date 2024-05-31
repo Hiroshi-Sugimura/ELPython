@@ -97,8 +97,8 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     print("|------------------------")
     return True
 
-WIFI_SSID = 'sugilab'
-WIFI_PASS = '4428211065122'
+WIFI_SSID = 'ssid'
+WIFI_PASS = 'pass'
 
 # Wi-Fi 接続実行関数
 def connect():

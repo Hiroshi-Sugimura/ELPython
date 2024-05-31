@@ -21,15 +21,15 @@ else:
     env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
 
 if env == 'Linux' or env == 'mac' or env == 'Windows':
-    import threading
     import uuid # for mac
     import binascii
+    import traceback
 else:
     import machine
     import network # for ip
     import ubinascii
 
-import asyncio
+import time
 import socket
 import struct
 import re
@@ -169,6 +169,8 @@ class EchonetLite():
         self.mreq = struct.pack('4sL', self.group, EchonetLite.INADDR_ANY)
         self.rsock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, self.mreq)
         self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.rsock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+        self.rsock.setblocking(False) # ノンブロッキング必須
 
     #  デストラクタ
     def __del__(self):
@@ -213,13 +215,7 @@ class EchonetLite():
         if ifunc != None:
             self.userInfFunc = ifunc
         # 受信設定
-        # self.rsock.setsocketopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.rsock.bind(('', self.ECHONETport))
-        self.rsock.settimeout(10)
-        try:
-            asyncio.run(self.recv())
-        except Exception as error:
-            print("Exception in thread start:", error)
         # インスタンスリスト通知 D5
         seoj = self.EOJ_NodeProfile
         deoj = self.EOJ_NodeProfile
@@ -229,56 +225,26 @@ class EchonetLite():
             self.sendMultiOPC1(seoj, deoj, self.INF, 0xd5, self.devices['0ef001'][0xd5]) # オブジェクトリスト通知
         print("# EchonetLite.begin() end.") if self.debug else '' # debug
 
-    if env == 'esp32':
-        async def recv(self):
-            while True:
+    # 受信スレッド作成
+    def recvProcess(self):
+        while True:
+            try:
+                data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
+                # bytesを16進数文字列に変換する
+                self.returner(ip[0], list(data))
+            except OSError as error: # timeout
+                # 大事なExceptionをロギングするためにtimeoutはどけておく
+                # print("# EchonetLite.recv() timeout op.") if self.debug else '' # debug
+                continue
+            except Exception as error:
+                print("# Exception!! EchonetLite.recv() thread:", error)
                 if env == 'esp32' or env == 'rp2':
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except OSError as error: # timeout
-                        # print(f"OSError in recv thread: {error}")
-                        continue
-                    except Exception as error:
-                        print("Exception in recv thread:", error)
-                        sys.print_exception(error)
+                    sys.print_exception(error)
                 else:
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except socket.timeout:
-                        continue
-                    except Exception as error:
-                        print("Exception in recv thread:", error)
-                        sys.print_exception(error)
-    else:
-        @asyncio.coroutine
-        def recv(self):
-            while True:
-                if env == 'esp32' or env == 'rp2':
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except OSError as error: # timeout
-                        # print(f"OSError in recv thread: {error}")
-                        continue
-                    except Exception as error:
-                        print("Exception in recv thread:", error)
-                        sys.print_exception(error)
-                else:
-                    try:
-                        data, ip = self.rsock.recvfrom(EchonetLite.BUFFER_SIZE)
-                        # bytesを16進数文字列に変換する
-                        self.returner(ip[0], list(data))
-                    except socket.timeout:
-                        continue
-                    except Exception as error:
-                        print("Exception in recv thread:", error)
-                        sys.print_exception(error)
-
+                    traceback.print_exception(error)
+            finally:
+                # print("# EchonetLite.recv() finally op.") if self.debug else '' # debug
+                pass
 
     def update(self, obj, epc, edt):
         """!
@@ -306,7 +272,7 @@ class EchonetLite():
         @param buffer (bytes|list[int]|str)
         """
         # print("# EchonetLite.send()") if self.debug else '' # debug
-        print("# Uni -->", message)
+        print("# Uni -->", message) if self.debug else '' # debug
 
         if type(message) is list:
             buffer = bytes(message)
@@ -426,7 +392,7 @@ class EchonetLite():
         @param message (bytes | list[int] | str)
         """
         print("# EchonetLite.sendMulti()") if self.debug else '' # debug
-        print("# Mlt -->", message)
+        print("# Mlt -->", message) if self.debug else '' # debug
         if type(message) == list:
             buffer = bytes(message)
         elif type(message) == str:
