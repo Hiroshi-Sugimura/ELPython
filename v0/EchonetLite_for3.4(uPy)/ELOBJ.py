@@ -6,10 +6,11 @@
 @date 2023年度
 @details PDCEDTをEPCと結びつけて管理することを主とする
 """
-from copy import deepcopy
+from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
 
 if __name__ == '__main__':  # unit test
-    from PDCEDT import PDCEDT
+    print("unit test")
+    from EchonetLite.PDCEDT import PDCEDT
 elif  __name__ == 'ELOBJ':  # EchonetLite.py test
     from PDCEDT import PDCEDT
 else:
@@ -206,7 +207,8 @@ class ELOBJ():
         """
         # print("===== ELOBJ.print()")
         for key in self.pdcedts:
-            print("EPC:", format(key,'02x'), ",", self.pdcedts[key].printString() )
+            #print("EPC:", format(key,'02x'), ",", self.pdcedts[key].printString() )
+            print("EPC:", '{:02X}'.format(key), ",", self.pdcedts[key].printString() )
 
 
 if __name__ == '__main__':
