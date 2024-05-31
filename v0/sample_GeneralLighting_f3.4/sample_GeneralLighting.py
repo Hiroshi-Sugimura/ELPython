@@ -28,24 +28,25 @@ def userSetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- Set")
-    print("| from:", ip)
+    print("| Set from:", ip)
     print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
 
     if esv == EchonetLite.SETI or esv == EchonetLite.SETC:
         if epc == 0x80: # power
             if pdcedt.edt == [0x30]:
-                print('Power ON')
+                print('| Power ON')
                 el.update(deoj, epc, pdcedt.edt)
             elif pdcedt.edt == [0x31]:
-                print('Power OFF')
+                print('| Power OFF')
                 el.update(deoj, epc, pdcedt.edt)
         elif epc == 0x81: # 設置場所
             el.update(deoj, epc, pdcedt.edt)
         elif epc == 0x88: # エラー情報
             el.update(deoj, esv, pdcedt.edt)
         else:
+            print("|------------------------")
             return False
+    print("|------------------------")
     return True
 
 def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -62,14 +63,15 @@ def userGetFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     @return bool 成功=True, 失敗=False、プロパティがあればTrueにする
     @note GET命令に関しては基本的に内部で処理で返却するので、一般にはここに何も記述しなくてよい。SET命令のときに、正しくデバイス情報をUpdateしておくことが重要
     """
-    print("---------- Get")
-    print("| from:", ip)
+    print("| Get from:", ip)
     print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
-        print("| The object is not managed.")
+        print("| The object is NOT managed.")
+        print("|------------------------")
         return False
     print("| The object is managed.")
+    print("|------------------------")
     return True
 
 def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
@@ -89,16 +91,12 @@ def userInfFunc( ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
     # 自分のオブジェクト以外無視
     if deoj != [0x02,0x90,0x01]:
         return False
-    print("---------- INF, RES, SNA")
-    print("| from:", ip)
+    print("| INF, RES, SNA from:", ip)
     print("| TID:", el.getHexString(tid), "SEOJ:", el.getHexString(seoj), "DEOJ:", el.getHexString(deoj), "ESV:", el.getHexString(esv), "OPC:", el.getHexString(opc), "EPC:", el.getHexString(epc), pdcedt.printString())
+    print("|------------------------")
     return True
 
 
-
-def loop():
-    while True:
-        time.sleep(60) # 1 min
 
 def handler(signum, frame):
     # 何らかの処理
@@ -107,16 +105,24 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGFPE, handler)
 
+# main
 try:
-    #el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting
-    el = EchonetLite([[0x02,0x90,0x01]], options={"debug":False}) # General Lighting
+    # setup
+    el = EchonetLite([[0x02,0x90,0x01]]) # General Lighting lib debug off
+    # el = EchonetLite([[0x02,0x90,0x01]], options={"debug":True}) # General Lighting lib debug on
+    el.update([0x02,0x90,0x01], 0x80, [0x31])
     el.update([0x02,0x90,0x01], 0x9d, [0x80, 0xd6])
     el.update([0x02,0x90,0x01], 0x9e, [0x80, 0xb0, 0xb6, 0xc0])
     el.update([0x02,0x90,0x01], 0x9f, [0x80, 0x81, 0x82, 0x83, 0x88, 0x8a, 0x9d, 0x9e, 0x9f])
     # el.println() # 設定確認
     el.begin(userSetFunc, userGetFunc, userInfFunc)
     print("| start")
-    loop()
+    print("|------------------------")
+
+    # loop
+    while True:
+        el.recvProcess()
+        time.sleep(0.1)
 except Exception as error:
     print("| except -> exit")
     print(error)
