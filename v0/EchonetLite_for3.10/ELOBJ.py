@@ -6,14 +6,16 @@
 @date 2023年度
 @details PDCEDTをEPCと結びつけて管理することを主とする
 """
-from copy import deepcopy
 
 if __name__ == '__main__':  # unit test
     from PDCEDT import PDCEDT
+    from utils import deepcopy_list, deepcopy_dict_pdcedt
 elif  __name__ == 'ELOBJ':  # EchonetLite.py test
     from PDCEDT import PDCEDT
+    from utils import deepcopy_list, deepcopy_dict_pdcedt
 else:
-    from .EchonetLite import PDCEDT
+    from .PDCEDT import PDCEDT
+    from .utils import deepcopy_list, deepcopy_dict_pdcedt
 
 
 class ELOBJ():
@@ -35,10 +37,10 @@ class ELOBJ():
         if other is None:
             pass
         elif type(other) is ELOBJ:
-            self.pdcedts = deepcopy(other.pdcedts)
-            self.inf_property_map_raw = deepcopy(other.inf_property_map_raw)
-            self.set_property_map_raw = deepcopy(other.set_property_map_raw)
-            self.get_property_map_raw = deepcopy(other.get_property_map_raw)
+            self.pdcedts = deepcopy_dict_pdcedt(other.pdcedts)
+            self.inf_property_map_raw = deepcopy_list(other.inf_property_map_raw)
+            self.set_property_map_raw = deepcopy_list(other.set_property_map_raw)
+            self.get_property_map_raw = deepcopy_list(other.get_property_map_raw)
         else:
             raise TypeError(f"ELOBJ: other must be None or ELOBJ, got {type(other).__name__}")
 

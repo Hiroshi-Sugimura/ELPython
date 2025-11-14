@@ -6,7 +6,7 @@
 @date 2023年度
 @details EDTをPDCと結びつけて管理することを主とする
 """
-from copy import deepcopy
+from .utils import deepcopy_list
 
 class PDCEDT():
     """!
@@ -27,7 +27,7 @@ class PDCEDT():
             self.length = 1
         elif type(obj) is PDCEDT:
             self.pdc = obj.pdc
-            self.edt = deepcopy(obj.edt)
+            self.edt = deepcopy_list(obj.edt)
             self.length = obj.length
         elif type(obj) is list:
             if len(obj) == 0:

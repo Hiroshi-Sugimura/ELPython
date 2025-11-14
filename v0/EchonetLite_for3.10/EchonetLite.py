@@ -171,7 +171,8 @@ class EchonetLite():
         """
         print("# EchonetLite.del()") if self.debug else '' # debug
         #  受信設定
-        self.rsock.close()
+        if hasattr(self, 'rsock'):
+            self.rsock.close()
 
     def dummyFuncion(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
         """!
