@@ -32,11 +32,15 @@ class ELOBJ():
         self.set_property_map_raw:list[int] = [] # 9e
         self.get_property_map_raw:list[int] = [] # 9f
         # コピーコンストラクタの実現
-        if type(other) is ELOBJ:
+        if other is None:
+            pass
+        elif type(other) is ELOBJ:
             self.pdcedts = deepcopy(other.pdcedts)
             self.inf_property_map_raw = deepcopy(other.inf_property_map_raw)
             self.set_property_map_raw = deepcopy(other.set_property_map_raw)
             self.get_property_map_raw = deepcopy(other.get_property_map_raw)
+        else:
+            raise TypeError(f"ELOBJ: other must be None or ELOBJ, got {type(other).__name__}")
 
     def __del__(self):
         """!
@@ -66,6 +70,9 @@ class ELOBJ():
         @return PDCEDT | None
         """
         # print('__getitem__ epc:', epc)
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.__getitem__: epc must be int, got {type(epc).__name__}")
+
         if epc in self.pdcedts:
             # print('exist')
             return self.pdcedts[epc]
@@ -80,6 +87,11 @@ class ELOBJ():
         @note 新規EPCに対するアクセスはエラーとなる。新規EPCはSetPDCEDTまたはSetEDTを使うこと
         """
         print('__setitem__')
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.__setitem__: epc must be int, got {type(epc).__name__}")
+        if not isinstance(pdcedt, PDCEDT):
+            raise TypeError(f"ELOBJ.__setitem__: pdcedt must be PDCEDT, got {type(pdcedt).__name__}")
+
         self.pdcedts[epc] = pdcedt
         return self.pdcedts[epc]
 
@@ -102,10 +114,15 @@ class ELOBJ():
         @param pdcedt (PDCEDT | list[int])
         @return PDCEDT
         """
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.SetPDCEDT: epc must be int, got {type(epc).__name__}")
+
         if type(pdcedt) is PDCEDT:
             self.pdcedts[epc] = pdcedt
         elif type(pdcedt) is list:
             self.pdcedts[epc] = PDCEDT(pdcedt)
+        else:
+            raise TypeError(f"ELOBJ.SetPDCEDT: pdcedt must be PDCEDT or list[int], got {type(pdcedt).__name__}")
         return self.pdcedts[epc]
 
     def SetEDT(self, epc:int, edt:list[int]) -> PDCEDT:
@@ -116,6 +133,14 @@ class ELOBJ():
         @return PDCEDT
         """
         # print('ELOBJ.SetEDT epc:', epc, 'edt', edt)
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.SetEDT: epc must be int, got {type(epc).__name__}")
+        if epc < 0 or epc > 255:
+            raise ValueError(f"ELOBJ.SetEDT: epc must be 0-255, got {epc}")
+        if not isinstance(edt, list):
+            raise TypeError(f"ELOBJ.SetEDT: edt must be list[int], got {type(edt).__name__}")
+
+        # edtの検証はPDCEDT.setEDTで行われる
         self.pdcedts[epc] = PDCEDT()
         self.pdcedts[epc].setEDT(edt)
         return self.pdcedts[epc]
@@ -145,6 +170,16 @@ class ELOBJ():
         @return PDCEDT | None
         """
         # print("SetMyPropertyMap")
+        if not isinstance(epcList, list):
+            raise TypeError(f"ELOBJ.SetMyPropertyMap: epcList must be list[int], got {type(epcList).__name__}")
+
+        # リスト内の値の検証
+        for i, val in enumerate(epcList):
+            if not isinstance(val, int):
+                raise TypeError(f"ELOBJ.SetMyPropertyMap: epcList[{i}] must be int, got {type(val).__name__}")
+            if val < 0 or val > 255:
+                raise ValueError(f"ELOBJ.SetMyPropertyMap: epcList[{i}] must be 0-255, got {val}")
+
         if epc == 0x9d:
             self.inf_property_map_raw = epcList
         elif epc == 0x9e:
@@ -180,6 +215,8 @@ class ELOBJ():
         @return bool
         """
         # print("hasInfProperty")
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.hasInfProperty: epc must be int, got {type(epc).__name__}")
         return epc in self.inf_property_map_raw
 
     def hasSetProperty(self, epc:int) -> bool:
@@ -189,6 +226,8 @@ class ELOBJ():
         @return bool
         """
         # print("hasSetProperty")
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.hasSetProperty: epc must be int, got {type(epc).__name__}")
         return epc in self.set_property_map_raw
 
     def hasGetProperty(self, epc:int) -> bool:
@@ -198,6 +237,8 @@ class ELOBJ():
         @return bool
         """
         # print("hasGetProperty")
+        if not isinstance(epc, int):
+            raise TypeError(f"ELOBJ.hasGetProperty: epc must be int, got {type(epc).__name__}")
         return epc in self.get_property_map_raw
 
     def println(self):

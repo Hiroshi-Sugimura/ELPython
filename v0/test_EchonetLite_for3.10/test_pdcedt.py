@@ -276,9 +276,12 @@ class TestPDCEDTErrorCases:
             PDCEDT(123)
 
     def test_init_with_none(self):
-        """Noneでの初期化エラーテスト"""
-        with pytest.raises(Exception):
-            PDCEDT(None)
+        """Noneでの初期化テスト（デフォルトコンストラクタ）"""
+        # Noneはデフォルトコンストラクタとして正常
+        pdcedt = PDCEDT(None)
+        assert pdcedt.pdc == 0
+        assert pdcedt.edt == []
+        assert pdcedt.length == 1
 
     def test_init_pdc_mismatch(self):
         """PDCとEDT長の不一致テスト"""

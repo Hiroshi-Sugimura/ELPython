@@ -99,6 +99,22 @@ class EchonetLite():
         self.userInfFunc = self.dummyFuncion
         if eojs == None:
             eojs = [ EchonetLite.EOJ_Controller ]
+
+        # EOJsのバリデーション
+        if not isinstance(eojs, list):
+            raise TypeError(f"EchonetLite: eojs must be list, got {type(eojs).__name__}")
+
+        for i, eoj in enumerate(eojs):
+            if not isinstance(eoj, list):
+                raise TypeError(f"EchonetLite: eojs[{i}] must be list, got {type(eoj).__name__}")
+            if len(eoj) != 3:
+                raise ValueError(f"EchonetLite: eojs[{i}] must have 3 elements (class_group, class, instance), got {len(eoj)}")
+            for j, val in enumerate(eoj):
+                if not isinstance(val, int):
+                    raise TypeError(f"EchonetLite: eojs[{i}][{j}] must be int, got {type(val).__name__}")
+                if val < 0 or val > 255:
+                    raise ValueError(f"EchonetLite: eojs[{i}][{j}] must be 0-255, got {val}")
+
         self.eojs = eojs
         self.instanceNumber = len(eojs)
         k:str = "" # devices index = key
@@ -224,6 +240,18 @@ class EchonetLite():
             obj = self.getHexString(obj)
         elif type(obj) is list:
             obj = self.getHexString(obj)
+        elif not isinstance(obj, str):
+            raise TypeError(f"EchonetLite.update: obj must be str or list[int], got {type(obj).__name__}")
+
+        if not isinstance(epc, int):
+            raise TypeError(f"EchonetLite.update: epc must be int, got {type(epc).__name__}")
+
+        if not isinstance(edt, list):
+            raise TypeError(f"EchonetLite.update: edt must be list[int], got {type(edt).__name__}")
+
+        # objが存在するかチェック
+        if obj not in self.devices:
+            raise KeyError(f"EchonetLite.update: device '{obj}' not found")
 
         if epc == 0x9d or epc == 0x9e or epc == 0x9f:
             self.devices[obj].SetMyPropertyMap(epc, edt)
@@ -872,6 +900,11 @@ class EchonetLite():
         @note インスタンス0は一つでもあればTrue
         """
         print("# EchonetLite.hasEOJs()") if self.debug else '' # debug
+        if not isinstance(eoj, list):
+            raise TypeError(f"EchonetLite.hasEOJs: eoj must be list, got {type(eoj).__name__}")
+        if len(eoj) != 3:
+            raise ValueError(f"EchonetLite.hasEOJs: eoj must have 3 elements, got {len(eoj)}")
+
         if (eoj == [0x0e,0xf0,0x00] or
             eoj == [0x0e,0xf0,0x01] or
             eoj == [0x0e,0xf0,0x02]):
@@ -910,6 +943,9 @@ class EchonetLite():
         @return bool
         """
         print("# EchonetLite.verifyPacket()") if self.debug else '' # debug
+        if not isinstance(data, list):
+            raise TypeError(f"EchonetLite.verifyPacket: data must be list, got {type(data).__name__}")
+
         packetSize = len(data)
         #  パケットサイズが最小サイズを満たさないならDrop
         if packetSize < EchonetLite.MINIMUM_FRAME:
@@ -1006,10 +1042,18 @@ class EchonetLite():
         """
         print("# EchonetLite.getHexString()") if self.debug else '' # debug
         if type(value) == list:
+            # リスト内の値の検証
+            for i, val in enumerate(value):
+                if not isinstance(val, int):
+                    raise TypeError(f"EchonetLite.getHexString: value[{i}] must be int, got {type(val).__name__}")
+                if val < 0 or val > 255:
+                    raise ValueError(f"EchonetLite.getHexString: value[{i}] must be 0-255, got {val}")
             hexArr = [format(i,'02x') for i in value]
             return "".join(hexArr).lower()
-        else:
+        elif isinstance(value, int):
             return format(value,'02x')
+        else:
+            raise TypeError(f"EchonetLite.getHexString: value must be int or list[int], got {type(value).__name__}")
 
     def getInstanceList(self, value:list[list[int]]) -> list[int]:
         """!
@@ -1018,6 +1062,16 @@ class EchonetLite():
         @return list[int]
         """
         print("# EchonetLite.getInstanceList()") if self.debug else '' # debug
+        if not isinstance(value, list):
+            raise TypeError(f"EchonetLite.getInstanceList: value must be list, got {type(value).__name__}")
+
+        # 各要素の検証
+        for i, eoj in enumerate(value):
+            if not isinstance(eoj, list):
+                raise TypeError(f"EchonetLite.getInstanceList: value[{i}] must be list, got {type(eoj).__name__}")
+            if len(eoj) != 3:
+                raise ValueError(f"EchonetLite.getInstanceList: value[{i}] must have 3 elements, got {len(eoj)}")
+
         num = len(value)
         flat:list[int] = sum(value, [])  # flatten
         flat.insert(0, num)
@@ -1030,6 +1084,9 @@ class EchonetLite():
         @return list[int]
         """
         print("# EchonetLite.getClassList()") if self.debug else '' # debug
+        if not isinstance(value, list):
+            raise TypeError(f"EchonetLite.getClassList: value must be list, got {type(value).__name__}")
+
         classList = [obj[0:2] for obj in value]
         uClassList:list[list[int]] = []
         # classListにあり、uClassListにないものを探してリストアップする

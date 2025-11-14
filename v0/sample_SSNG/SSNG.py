@@ -10,7 +10,12 @@ import threading
 import time
 import datetime
 import json
+import os
 from EchonetLite import EchonetLite, PDCEDT
+
+# macOSのダークモード問題を回避: ライトモードで起動
+if platform.system() == 'Darwin':  # macOS
+    os.environ['TK_THEME'] = 'aqua'
 
 
 #====================================================================================================
@@ -47,6 +52,21 @@ class MainWin:
 
         win_main.geometry("1024x768")    # rootウィンドウの大きさを1024x768に
         win_main.minsize(1024,768)
+
+        # macOSダークモード対策: 背景色と文字色を明示的に設定
+        if platform.system() == 'Darwin':
+            win_main.configure(bg='white')
+            # デフォルトスタイル設定
+            default_bg = 'white'
+            default_fg = 'black'
+            win_main.option_add('*Background', default_bg)
+            win_main.option_add('*Foreground', default_fg)
+            win_main.option_add('*Entry*Background', 'white')
+            win_main.option_add('*Entry*Foreground', 'black')
+            win_main.option_add('*Text*Background', 'white')
+            win_main.option_add('*Text*Foreground', 'black')
+            win_main.option_add('*Listbox*Background', 'white')
+            win_main.option_add('*Listbox*Foreground', 'black')
 
         # facilities表示データ
         lb_ips_items = tk.StringVar(value=self.ips)
