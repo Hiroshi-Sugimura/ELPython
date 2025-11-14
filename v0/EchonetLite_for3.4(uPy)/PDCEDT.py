@@ -17,7 +17,7 @@ elif hasattr(os, 'uname'):
 else:
     env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
 
-from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
+from utils import deepcopy_list
 
 class PDCEDT():
     """!
@@ -36,21 +36,31 @@ class PDCEDT():
             self.pdc = 0
             self.edt = []
             self.length = 1
-        elif type(obj) is PDCEDT:
+        elif isinstance(obj, PDCEDT):
             self.pdc = obj.pdc
-            self.edt = deepcopy(obj.edt)
+            self.edt = deepcopy_list(obj.edt)
             self.length = obj.length
-        elif type(obj) is list and len(obj) != 0:
-            self.pdc = obj[0]
-            if self.pdc == 0:
+        elif isinstance(obj, list):
+            if len(obj) == 0:
+                self.pdc = 0
                 self.edt = []
+                self.length = 1
             else:
-                self.edt = obj[1:]
-            self.length = len(obj)
+                # リスト内の値の検証
+                for i, val in enumerate(obj):
+                    if not isinstance(val, int):
+                        raise TypeError("PDCEDT: list element at index {} must be int, got {}".format(i, type(val).__name__))
+                    if val < 0 or val > 255:
+                        raise ValueError("PDCEDT: list element at index {} must be 0-255, got {}".format(i, val))
+
+                self.pdc = obj[0]
+                if self.pdc == 0:
+                    self.edt = []
+                else:
+                    self.edt = obj[1:]
+                self.length = len(obj)
         else:
-            self.pdc = 0
-            self.edt = []
-            self.length = 1
+            raise TypeError("PDCEDT: obj must be None, PDCEDT or list, got {}".format(type(obj).__name__))
 
     def __del__(self):
         """!
@@ -75,6 +85,16 @@ class PDCEDT():
         @brief EDTを指定して格納、PDCは自動計算
         @param edt (list[int])
         """
+        # バリデーション
+        if not isinstance(edt, list):
+            raise TypeError("PDCEDT.setEDT: edt must be list, got {}".format(type(edt).__name__))
+
+        for i, val in enumerate(edt):
+            if not isinstance(val, int):
+                raise TypeError("PDCEDT.setEDT: edt[{}] must be int, got {}".format(i, type(val).__name__))
+            if val < 0 or val > 255:
+                raise ValueError("PDCEDT.setEDT: edt[{}] must be 0-255, got {}".format(i, val))
+
         self.pdc = len(edt)
         if self.pdc == 0:
             self.edt = []

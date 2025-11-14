@@ -1,0 +1,33 @@
+# .gitignore for test directory (Python 3.4 compatible version)
+
+# 仮想環境
+venv/
+env/
+ENV/
+
+# pytest cache
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# カバレッジレポート
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# テスト結果
+test-results/
+.pytest_cache/

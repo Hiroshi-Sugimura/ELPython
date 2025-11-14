@@ -20,7 +20,7 @@ elif hasattr(os, 'uname'):
 else:
     env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
 
-if env == 'Linux' or env == 'mac' or env == 'Windows':
+if env == 'Linux' or env == 'Darwin' or env == 'Windows':
     import uuid # for mac
     import binascii
     import traceback
@@ -36,11 +36,11 @@ import re
 
 if __name__ == '__main__':
     print("unit test")
-    from EchonetLite.PDCEDT import PDCEDT
-    from EchonetLite.ELOBJ import ELOBJ
+    from PDCEDT import PDCEDT
+    from ELOBJ import ELOBJ
 else:
-    from EchonetLite.PDCEDT import PDCEDT
-    from EchonetLite.ELOBJ import ELOBJ
+    from PDCEDT import PDCEDT
+    from ELOBJ import ELOBJ
 
 
 class EchonetLite():
@@ -91,10 +91,28 @@ class EchonetLite():
         @param options デフォルトNone, future reserved
         @note eojsは一つの場合でも次のように配列として定義する [ EchonetLite.EOJ_Controller ]
         """
+        # パラメータの検証
+        if eojs is not None:
+            if not isinstance(eojs, list):
+                raise TypeError("EchonetLite: eojs must be list or None, got {}".format(type(eojs).__name__))
+            for i, eoj in enumerate(eojs):
+                if not isinstance(eoj, list):
+                    raise TypeError("EchonetLite: eojs[{}] must be list, got {}".format(i, type(eoj).__name__))
+                if len(eoj) != 3:
+                    raise ValueError("EchonetLite: eojs[{}] length must be 3, got {}".format(i, len(eoj)))
+                for j, val in enumerate(eoj):
+                    if not isinstance(val, int):
+                        raise TypeError("EchonetLite: eojs[{}][{}] must be int, got {}".format(i, j, type(val).__name__))
+                    if val < 0 or val > 255:
+                        raise ValueError("EchonetLite: eojs[{}][{}] must be 0-255, got {}".format(i, j, val))
+
+        if options is not None and not isinstance(options, dict):
+            raise TypeError("EchonetLite: options must be dict or None, got {}".format(type(options).__name__))
+
         # optionsを内部に保持
         self.debug = False
         if options:
-            if options["debug"] == True:
+            if "debug" in options and options["debug"] == True:
                 self.debug = True
 
         print("# EchonetLite.init()") if self.debug else '' # debug
@@ -103,14 +121,8 @@ class EchonetLite():
         if env == 'esp32' or env == 'rp2':
             wlan = network.WLAN(network.STA_IF)
             self.LOCAL_ADDR = wlan.ifconfig()[0]
-        elif env == 'Linux': # for Linux
-            localIP = ipget.ipget()
-            # print(localIP.ipaddr("wlan0"))
-            self.LOCAL_ADDR = str(localIP.ipaddr("wlan0")).split('/')[0] # for Linux
-        elif env == 'Darwin': # mac
-            self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for mac
         else:
-            self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for windows
+            self.LOCAL_ADDR = self._get_local_ip()
 
         print("# Local IP:", self.LOCAL_ADDR) if self.debug else '' # debug
         self.mac = self.getHwAddr()
@@ -177,9 +189,25 @@ class EchonetLite():
         """!
         @brief デストラクタ
         """
-        print("# EchonetLite.del()") if self.debug else '' # debug
+        if hasattr(self, 'debug'):
+            print("# EchonetLite.del()") if self.debug else '' # debug
         #  受信設定
-        self.rsock.close()
+        if hasattr(self, 'rsock'):
+            self.rsock.close()
+
+    def _get_local_ip(self):
+        """!
+        @brief ローカルIPアドレスを取得する
+        @return str ローカルIPアドレス
+        """
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('8.8.8.8', 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip
+        except Exception:
+            return '127.0.0.1'
 
     def dummyFuncion(self, ip, tid, seoj, deoj, esv, opc, epc, pdcedt):
         """!

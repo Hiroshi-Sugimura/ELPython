@@ -6,7 +6,7 @@
 @date 2023年度
 @details PDCEDTをEPCと結びつけて管理することを主とする
 """
-from copy import deepcopy # パッケージマネージャからcopy @ micropython-libをインストールする
+from utils import deepcopy_list, deepcopy_dict_pdcedt
 
 if __name__ == '__main__':  # unit test
     print("unit test")
@@ -14,7 +14,7 @@ if __name__ == '__main__':  # unit test
 elif  __name__ == 'ELOBJ':  # EchonetLite.py test
     from PDCEDT import PDCEDT
 else:
-    from .EchonetLite import PDCEDT
+    from .PDCEDT import PDCEDT
 
 
 class ELOBJ():
@@ -33,11 +33,15 @@ class ELOBJ():
         self.set_property_map_raw = [] # 9e
         self.get_property_map_raw = [] # 9f
         # コピーコンストラクタの実現
-        if type(other) is ELOBJ:
-            self.pdcedts = deepcopy(other.pdcedts)
-            self.inf_property_map_raw = deepcopy(other.inf_property_map_raw)
-            self.set_property_map_raw = deepcopy(other.set_property_map_raw)
-            self.get_property_map_raw = deepcopy(other.get_property_map_raw)
+        if other is None:
+            pass
+        elif isinstance(other, ELOBJ):
+            self.pdcedts = deepcopy_dict_pdcedt(other.pdcedts)
+            self.inf_property_map_raw = deepcopy_list(other.inf_property_map_raw)
+            self.set_property_map_raw = deepcopy_list(other.set_property_map_raw)
+            self.get_property_map_raw = deepcopy_list(other.get_property_map_raw)
+        else:
+            raise TypeError("ELOBJ: other must be None or ELOBJ, got {}".format(type(other).__name__))
 
     def __del__(self):
         """!
@@ -67,13 +71,18 @@ class ELOBJ():
         @return PDCEDT | None
         """
         # print('__getitem__ epc:', epc)
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.__getitem__: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.__getitem__: epc must be 0x80-0xff, got {}".format(hex(epc)))
+
         if epc in self.pdcedts:
             # print('exist')
             return self.pdcedts[epc]
         else:
             return None
 
-    def __setitem__(self, epc:int, pdcedt:PDCEDT) -> PDCEDT:
+    def __setitem__(self, epc, pdcedt):
         """!
         @brief 配列[]インタフェースを提供する。特にlvalueとして
         @param pdcedt (PDCEDT)
@@ -81,6 +90,13 @@ class ELOBJ():
         @note 新規EPCに対するアクセスはエラーとなる。新規EPCはSetPDCEDTまたはSetEDTを使うこと
         """
         print('__setitem__')
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.__setitem__: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.__setitem__: epc must be 0x80-0xff, got {}".format(hex(epc)))
+        if not isinstance(pdcedt, PDCEDT):
+            raise TypeError("ELOBJ.__setitem__: pdcedt must be PDCEDT, got {}".format(type(pdcedt).__name__))
+
         self.pdcedts[epc] = pdcedt
         return self.pdcedts[epc]
 
@@ -90,6 +106,11 @@ class ELOBJ():
         @param epc int
         @return PDCEDT | None
         """
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.GetPDCEDT: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.GetPDCEDT: epc must be 0x80-0xff, got {}".format(hex(epc)))
+
         if epc in self.pdcedts:
             # print('exist')
             return self.pdcedts[epc]
@@ -103,10 +124,18 @@ class ELOBJ():
         @param pdcedt (PDCEDT | list[int])
         @return PDCEDT
         """
-        if type(pdcedt) is PDCEDT:
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.SetPDCEDT: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.SetPDCEDT: epc must be 0x80-0xff, got {}".format(hex(epc)))
+
+        if isinstance(pdcedt, PDCEDT):
             self.pdcedts[epc] = pdcedt
-        elif type(pdcedt) is list:
+        elif isinstance(pdcedt, list):
             self.pdcedts[epc] = PDCEDT(pdcedt)
+        else:
+            raise TypeError("ELOBJ.SetPDCEDT: pdcedt must be PDCEDT or list, got {}".format(type(pdcedt).__name__))
+
         return self.pdcedts[epc]
 
     def SetEDT(self, epc, edt):
@@ -117,6 +146,13 @@ class ELOBJ():
         @return PDCEDT
         """
         # print('ELOBJ.SetEDT epc:', epc, 'edt', edt)
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.SetEDT: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.SetEDT: epc must be 0x80-0xff, got {}".format(hex(epc)))
+        if not isinstance(edt, list):
+            raise TypeError("ELOBJ.SetEDT: edt must be list, got {}".format(type(edt).__name__))
+
         self.pdcedts[epc] = PDCEDT()
         self.pdcedts[epc].setEDT(edt)
         return self.pdcedts[epc]
@@ -128,6 +164,9 @@ class ELOBJ():
         @return list[int] | None
         """
         #print("GetMyPropertyMap")
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.GetMyPropertyMap: epc must be int, got {}".format(type(epc).__name__))
+
         if epc == 0x9d:
             return self.inf_property_map_raw
         elif epc == 0x9e:
@@ -135,8 +174,7 @@ class ELOBJ():
         elif epc == 0x9f:
             return self.get_property_map_raw
         else:
-            print("ELOBJ Error!! GetMyPropertyMap epc:", hex(epc))
-            return None
+            raise ValueError("ELOBJ.GetMyPropertyMap: epc must be 0x9d, 0x9e or 0x9f, got {}".format(hex(epc)))
 
     def SetMyPropertyMap(self, epc, epcList):
         """!
@@ -146,6 +184,18 @@ class ELOBJ():
         @return PDCEDT | None
         """
         # print("SetMyPropertyMap")
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.SetMyPropertyMap: epc must be int, got {}".format(type(epc).__name__))
+        if not isinstance(epcList, list):
+            raise TypeError("ELOBJ.SetMyPropertyMap: epcList must be list, got {}".format(type(epcList).__name__))
+
+        # epcListの各要素を検証
+        for i, val in enumerate(epcList):
+            if not isinstance(val, int):
+                raise TypeError("ELOBJ.SetMyPropertyMap: epcList[{}] must be int, got {}".format(i, type(val).__name__))
+            if val < 0x80 or val > 0xff:
+                raise ValueError("ELOBJ.SetMyPropertyMap: epcList[{}] must be 0x80-0xff, got {}".format(i, hex(val)))
+
         if epc == 0x9d:
             self.inf_property_map_raw = epcList
         elif epc == 0x9e:
@@ -153,8 +203,7 @@ class ELOBJ():
         elif epc == 0x9f:
             self.get_property_map_raw = epcList
         else:
-            print("ELOBJ Error!! SetMyPropertyMap epc:", hex(epc))
-            return None
+            raise ValueError("ELOBJ.SetMyPropertyMap: epc must be 0x9d, 0x9e or 0x9f, got {}".format(hex(epc)))
 
         n = len(epcList)
         if n < 16: # format 1
@@ -174,31 +223,43 @@ class ELOBJ():
             self.pdcedts[epc] = pdcedt
         return self.pdcedts[epc]
 
-    def hasInfProperty(self, epc:int) -> bool:
+    def hasInfProperty(self, epc):
         """!
         @brief 自身のINFプロパティか調べる
         @param epc int
         @return bool
         """
         # print("hasInfProperty")
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.hasInfProperty: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.hasInfProperty: epc must be 0x80-0xff, got {}".format(hex(epc)))
         return epc in self.inf_property_map_raw
 
-    def hasSetProperty(self, epc:int) -> bool:
+    def hasSetProperty(self, epc):
         """!
         @brief 自身のSETプロパティか調べる
         @param epc int
         @return bool
         """
         # print("hasSetProperty")
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.hasSetProperty: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.hasSetProperty: epc must be 0x80-0xff, got {}".format(hex(epc)))
         return epc in self.set_property_map_raw
 
-    def hasGetProperty(self, epc:int) -> bool:
+    def hasGetProperty(self, epc):
         """!
         @brief 自身のGETプロパティか調べる
         @param epc int
         @return bool
         """
         # print("hasGetProperty")
+        if not isinstance(epc, int):
+            raise TypeError("ELOBJ.hasGetProperty: epc must be int, got {}".format(type(epc).__name__))
+        if epc < 0x80 or epc > 0xff:
+            raise ValueError("ELOBJ.hasGetProperty: epc must be 0x80-0xff, got {}".format(hex(epc)))
         return epc in self.get_property_map_raw
 
     def println(self):
