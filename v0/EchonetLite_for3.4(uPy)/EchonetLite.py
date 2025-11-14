@@ -959,6 +959,15 @@ class EchonetLite():
         @note インスタンス0は一つでもあればTrue
         """
         # print("# EchonetLite.hasEOJs()") if self.debug else '' # debug
+
+        # 型チェック
+        if not isinstance(eoj, list):
+            raise TypeError("EchonetLite.hasEOJs: eoj must be list, got {}".format(type(eoj).__name__))
+
+        # EOJ構造チェック(3要素必要)
+        if len(eoj) != 3:
+            raise ValueError("EchonetLite.hasEOJs: eoj must have 3 elements, got {}".format(len(eoj)))
+
         if (eoj == [0x0e,0xf0,0x00] or
             eoj == [0x0e,0xf0,0x01] or
             eoj == [0x0e,0xf0,0x02]):
@@ -1001,6 +1010,11 @@ class EchonetLite():
         @return bool
         """
         # print("# EchonetLite.verifyPacket()") if self.debug else '' # debug
+
+        # 型チェック
+        if not isinstance(data, list):
+            raise TypeError("EchonetLite.verifyPacket: data must be list, got {}".format(type(data).__name__))
+
         packetSize = len(data)
         #  パケットサイズが最小サイズを満たさないならDrop
         if packetSize < EchonetLite.MINIMUM_FRAME:
@@ -1101,12 +1115,24 @@ class EchonetLite():
         """
         # print("# EchonetLite.getHexString()") if self.debug else '' # debug
         if type(value) == list:
+            # リストの各要素を検証
+            for i, val in enumerate(value):
+                if not isinstance(val, int):
+                    raise TypeError("EchonetLite.getHexString: list element at index {} must be int, got {}".format(i, type(val).__name__))
+                if val < 0 or val > 255:
+                    raise ValueError("EchonetLite.getHexString: list element at index {} must be 0-255, got {}".format(i, val))
+
             if env == 'esp32' or env == 'rp2':
                 hexArr = ['{:02x}'.format(i) for i in value]
             else:
                 hexArr = [format(i,'02x') for i in value]
             return "".join(hexArr).lower()
         else:
+            if not isinstance(value, int):
+                raise TypeError("EchonetLite.getHexString: value must be int or list, got {}".format(type(value).__name__))
+            if value < 0 or value > 255:
+                raise ValueError("EchonetLite.getHexString: value must be 0-255, got {}".format(value))
+
             if env == 'esp32' or env == 'rp2':
                 return '{:02X}'.format(value)
             else:
@@ -1119,6 +1145,14 @@ class EchonetLite():
         @return list[int]
         """
         # print("# EchonetLite.getInstanceList()") if self.debug else '' # debug
+
+        # 各EOJの構造チェック
+        for i, eoj in enumerate(value):
+            if not isinstance(eoj, list):
+                raise TypeError("EchonetLite.getInstanceList: eoj at index {} must be list, got {}".format(i, type(eoj).__name__))
+            if len(eoj) != 3:
+                raise ValueError("EchonetLite.getInstanceList: eoj at index {} must have 3 elements, got {}".format(i, len(eoj)))
+
         num = len(value)
         flat = sum(value, [])  # flatten
         flat.insert(0, num)

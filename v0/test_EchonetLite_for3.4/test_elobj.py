@@ -526,18 +526,18 @@ class TestELOBJErrorCases:
             elobj[0x80] = None
 
     def test_setMyPropertyMap_with_invalid_epc(self):
-        """SetMyPropertyMapに無効なEPCを渡すエラーテスト"""
+        """SetMyPropertyMapに無効なEPCを渡すエラーテスト - 厳格なバリデーション"""
         elobj = ELOBJ()
 
-        # 0x9d, 0x9e, 0x9f以外は無効
-        result = elobj.SetMyPropertyMap(0x80, [0x80])
-        assert result is None
+        # 0x9d, 0x9e, 0x9f以外は例外を投げる
+        with pytest.raises(ValueError):
+            elobj.SetMyPropertyMap(0x80, [0x80])
 
-        result = elobj.SetMyPropertyMap(0x9c, [0x80])
-        assert result is None
+        with pytest.raises(ValueError):
+            elobj.SetMyPropertyMap(0x9c, [0x80])
 
-        result = elobj.SetMyPropertyMap(0xa0, [0x80])
-        assert result is None
+        with pytest.raises(ValueError):
+            elobj.SetMyPropertyMap(0xa0, [0x80])
 
     def test_setMyPropertyMap_with_invalid_list_type(self):
         """SetMyPropertyMapに無効なリスト型を渡すエラーテスト"""
@@ -566,14 +566,15 @@ class TestELOBJErrorCases:
             elobj.SetMyPropertyMap(0x9d, [0x80, "invalid"])
 
     def test_getMyPropertyMap_with_invalid_epc(self):
-        """GetMyPropertyMapに無効なEPCを渡すテスト"""
+        """GetMyPropertyMapに無効なEPCを渡すテスト - 厳格なバリデーション"""
         elobj = ELOBJ()
 
-        result = elobj.GetMyPropertyMap(0x80)
-        assert result is None
+        # 0x9d, 0x9e, 0x9f以外は例外を投げる
+        with pytest.raises(ValueError):
+            elobj.GetMyPropertyMap(0x80)
 
-        result = elobj.GetMyPropertyMap(0x9c)
-        assert result is None
+        with pytest.raises(ValueError):
+            elobj.GetMyPropertyMap(0x9c)
 
     def test_hasInfProperty_with_invalid_type(self):
         """hasInfPropertyに無効な型を渡すエラーテスト"""
@@ -629,16 +630,27 @@ class TestELOBJErrorCases:
             ELOBJ([])
 
     def test_boundary_epc_values(self):
-        """境界値のEPCテスト"""
+        """境界値のEPCテスト - 厳格なバリデーション"""
         elobj = ELOBJ()
 
-        # 0x00
-        result = elobj.SetEDT(0x00, [0x30])
+        # 0x00 - 0x80未満は例外を投げる
+        with pytest.raises(ValueError):
+            elobj.SetEDT(0x00, [0x30])
+
+        # 0x7F - 0x80未満は例外を投げる
+        with pytest.raises(ValueError):
+            elobj.SetEDT(0x7F, [0x30])
+
+        # 0x80 - 境界値OK
+        result = elobj.SetEDT(0x80, [0x30])
         assert result is not None
 
-        # 0xFF
+        # 0xFF - 境界値OK
         result = elobj.SetEDT(0xff, [0x30])
         assert result is not None
+
+        # 0x100 - 範囲外は例外を投げる(intなので実際は通る可能性もあるが)
+        # この部分は範囲チェックが実装されていれば追加可能
 
     def test_empty_property_map(self):
         """空のプロパティマップのテスト"""
