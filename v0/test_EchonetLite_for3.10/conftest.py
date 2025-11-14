@@ -26,9 +26,11 @@ def mock_socket(mocker):
     return mocker.patch('socket.socket')
 
 @pytest.fixture
-def echonet_lite(mock_socket):
+def echonet_lite(mocker, mock_socket):
     """EchonetLiteインスタンスを返すフィクスチャ"""
     from EchonetLite import EchonetLite
+    # _get_local_ip()をモックしてテスト用のIPアドレスを返す
+    mocker.patch.object(EchonetLite, '_get_local_ip', return_value='192.168.1.100')
     return EchonetLite()
 
 @pytest.fixture

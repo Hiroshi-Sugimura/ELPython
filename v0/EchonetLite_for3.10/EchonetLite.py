@@ -10,8 +10,6 @@
 import platform
 import socket
 import binascii
-if platform.system() == 'Linux':
-    import ipget  #  インストール必要, for Linux
 import threading
 import struct
 import uuid
@@ -80,15 +78,8 @@ class EchonetLite():
 
         print("# EchonetLite.init()") if self.debug else '' # debug
 
-        # ip 設定
-        if platform.system() == 'Linux': # for Linux
-            localIP = ipget.ipget()
-            # print(localIP.ipaddr("wlan0"))
-            self.LOCAL_ADDR = str(localIP.ipaddr("wlan0")).split('/')[0] # for Linux
-        elif platform.system() == 'Darwin': # mac
-            self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for mac
-        else:
-            self.LOCAL_ADDR = socket.gethostbyname(socket.gethostname()) # for windows
+        # ip 設定 - 標準ライブラリのみで実現
+        self.LOCAL_ADDR = self._get_local_ip()
 
         print("# Local IP:", self.LOCAL_ADDR) if self.debug else '' # debug
         self.mac:list[int] = self.getHwAddr()
@@ -173,6 +164,29 @@ class EchonetLite():
         #  受信設定
         if hasattr(self, 'rsock'):
             self.rsock.close()
+
+    def _get_local_ip(self):
+        """!
+        @brief ローカルIPアドレスを取得（外部ライブラリ不要）
+        @return str ローカルIPアドレス
+        @details UDPソケットを使ってデフォルトルートのIPアドレスを取得
+                 実際には接続しないので高速で安全
+        """
+        try:
+            # ダミーのUDPソケットを作成（実際には送信しない）
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # インターネット上の適当なアドレスに接続を試みる（実際にはパケットを送らない）
+            s.connect(('8.8.8.8', 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except Exception as e:
+            # フォールバック: ホスト名からIPを取得
+            try:
+                return socket.gethostbyname(socket.gethostname())
+            except:
+                # 最終フォールバック
+                return '127.0.0.1'
 
     def dummyFuncion(self, ip:str, tid:list[int], seoj:list[int], deoj:list[int], esv:int, opc:int, epc:int, pdcedt:PDCEDT):
         """!
