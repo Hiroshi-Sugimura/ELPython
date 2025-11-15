@@ -17,7 +17,12 @@ elif hasattr(os, 'uname'):
 else:
     env = 'Windows'  # 何にもわからなければWindowsとするけど、多分ここには来ない
 
-from utils import deepcopy_list
+if __name__ == '__main__':
+    from EchonetLite.utils import deepcopy_list
+elif __name__ == 'EchonetLite.PDCEDT':
+    from .utils import deepcopy_list
+else:
+    from utils import deepcopy_list
 
 class PDCEDT():
     """!

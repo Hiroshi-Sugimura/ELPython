@@ -6,15 +6,15 @@
 @date 2023年度
 @details PDCEDTをEPCと結びつけて管理することを主とする
 """
-from utils import deepcopy_list, deepcopy_dict_pdcedt
-
-if __name__ == '__main__':  # unit test
-    print("unit test")
+if __name__ == '__main__':
+    from EchonetLite.utils import deepcopy_list, deepcopy_dict_pdcedt
     from EchonetLite.PDCEDT import PDCEDT
-elif  __name__ == 'ELOBJ':  # EchonetLite.py test
-    from PDCEDT import PDCEDT
-else:
+elif __name__ == 'EchonetLite.ELOBJ':
+    from .utils import deepcopy_list, deepcopy_dict_pdcedt
     from .PDCEDT import PDCEDT
+else:
+    from utils import deepcopy_list, deepcopy_dict_pdcedt
+    from PDCEDT import PDCEDT
 
 
 class ELOBJ():

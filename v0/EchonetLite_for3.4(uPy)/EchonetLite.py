@@ -36,8 +36,11 @@ import re
 
 if __name__ == '__main__':
     print("unit test")
-    from PDCEDT import PDCEDT
-    from ELOBJ import ELOBJ
+    from EchonetLite.PDCEDT import PDCEDT
+    from EchonetLite.ELOBJ import ELOBJ
+elif __name__ == 'EchonetLite.EchonetLite':
+    from .PDCEDT import PDCEDT
+    from .ELOBJ import ELOBJ
 else:
     from PDCEDT import PDCEDT
     from ELOBJ import ELOBJ
